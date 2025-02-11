@@ -118,6 +118,12 @@ public class Listener implements org.bukkit.event.Listener {
                     Entity entity = minecart.getWorld().spawnEntity(minecart.getLocation(), entry.getValue());
                     entity.setVelocity(minecart.getVelocity());
                     entity.setRotation(minecart.getLocation().getYaw(), minecart.getLocation().getPitch());
+                    if(material == Material.CHEST) {
+                        BlockStateMeta meta = (BlockStateMeta) item.getItemMeta();
+                        Chest chest = (Chest) meta.getBlockState();
+                        StorageMinecart newMinecart = (StorageMinecart) entity;
+                        newMinecart.getInventory().setContents(chest.getInventory().getContents());
+                    }
                     minecart.remove();
                     return;
                 }

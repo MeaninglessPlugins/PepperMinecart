@@ -63,6 +63,7 @@ public class Listener implements org.bukkit.event.Listener {
                 if (!player.isSneaking()) {
                     //交互
                     if (PepperMinecart.getInstance().getConfigTemplate().isEnableCustomInteract()) {//允许交互
+                        boolean isInteracted = true;
                         switch (minecart.getDisplayBlockData().getMaterial()) {
                             case CRAFTING_TABLE -> player.openWorkbench(null, true);
                             case GRINDSTONE -> player.openGrindstone(null, true);
@@ -70,12 +71,14 @@ public class Listener implements org.bukkit.event.Listener {
                             case CARTOGRAPHY_TABLE -> player.openCartographyTable(null, true);
                             case SMITHING_TABLE -> player.openSmithingTable(null, true);
                             case STONECUTTER -> player.openStonecutter(null, true);
+                            default -> isInteracted = false;
                         }
-                        event.setCancelled(true);
-                        return;
+                        if(isInteracted){
+                            event.setCancelled(true);
+                            return;
+                        }
                     }
                     if (minecart.getDisplayBlockData().getMaterial().getKey().getKey().endsWith("_shulker_box")) {
-                        //Unfinished!
                         MinecartChestHolder holder = PepperMinecart.getInstance().holderMap.get(minecart);
                         if(holder == null){
                             ItemStack boxItem = NBT.getPersistentData(minecart, nbt ->
@@ -87,8 +90,8 @@ public class Listener implements org.bukkit.event.Listener {
                         }
                         event.getPlayer().openInventory(holder.getInventory());
                         event.setCancelled(true);
-                        return;
                     }
+                    return;
                 }
                 ItemStack is = NBT.getPersistentData(minecart, nbt ->
                         nbt.getItemStack("BlockInfo"));

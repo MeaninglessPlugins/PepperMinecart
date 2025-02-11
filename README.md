@@ -15,14 +15,14 @@ Interact with custom minecart is supported! (like Crafting Table Minecart) ：
 
 ![](https://www.minebbs.com/attachments/1-1-png.65912/)
 
-Specially:
-
-1. You can't sit on custom minecarts!
-2. There might be some bugs in the plugin.
-
+Specially: You can't sit on custom minecarts!
 
 [![](https://s21.ax1x.com/2024/04/30/pkFfvqS.md.png)](https://imgse.com/i/pkFfvqS)
 
 [![](https://s21.ax1x.com/2024/04/30/pkFfzVg.md.png)](https://imgse.com/i/pkFfzVg)
+
+## BStats
+
+[![bStats Graph Data](https://bstats.org/signatures/bukkit/PepperMinecart.svg)](https://bstats.org/plugin/bukkit/PepperMinecart/21763)
 
 Welcome PR&Star~

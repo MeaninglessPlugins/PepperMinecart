@@ -128,6 +128,7 @@ public class Listener implements org.bukkit.event.Listener {
                                 BlockStateMeta meta = (BlockStateMeta) item.getItemMeta();
                                 Chest chest = (Chest) meta.getBlockState();
                                 StorageMinecart newMinecart = (StorageMinecart) entity;
+                                if(chest.getInventory().getContents() != null)
                                 newMinecart.getInventory().setContents(chest.getInventory().getContents());
                             }
                             minecart.remove();

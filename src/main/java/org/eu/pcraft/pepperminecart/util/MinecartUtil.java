@@ -54,11 +54,10 @@ public final class MinecartUtil {
     }
     public static void placeBlock(Minecart minecart, ItemStack placedItem){
         Material material = placedItem.getType();
-        for (Map.Entry<Material, EntityType> entry : entityTransformations.entrySet()) {
-            if (entry.getKey() == material) {
-                MinecartUtil.replaceMinecart(minecart, entry.getValue(), placedItem);
-                return;
-            }
+        EntityType newType = entityTransformations.get(material);
+        if(newType != null){
+            MinecartUtil.replaceMinecart(minecart, newType, placedItem);
+            return;
         }
         NBT.modifyPersistentData(minecart, nbt -> {
             nbt.setItemStack("BlockInfo", placedItem);

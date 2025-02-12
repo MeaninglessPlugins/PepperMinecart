@@ -16,13 +16,14 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import org.eu.pcraft.pepperminecart.holder.MinecartChestHolder;
 import org.eu.pcraft.pepperminecart.util.MinecartUtil;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
 
 
 public class PepperListener implements Listener {
 
-    private boolean customWorkstationInteract(Player player, ItemStack stack) {
+    private boolean customWorkstationInteract(Player player, @NotNull ItemStack stack) {
         Material type = stack.getType();
         Consumer<Player> consumer = MinecartUtil.getBlockIntercations().get(type);
         if (consumer != null) {
@@ -32,7 +33,7 @@ public class PepperListener implements Listener {
         return false;
     }
 
-    private boolean customShulkerboxInteract(Player player, Minecart minecart, ItemStack stack) {
+    private boolean customShulkerboxInteract(Player player, Minecart minecart, @NotNull ItemStack stack) {
         if (stack.getType().getKey().getKey().endsWith("_shulker_box")) {
             MinecartChestHolder holder = PepperMinecart.getInstance().holderMap.get(minecart);
             if (holder == null) {

@@ -50,6 +50,7 @@ public class PepperListener implements Listener {
     private boolean doCustomInteract(Player player, Minecart minecart) {
         //自定义交互
         ItemStack item = MinecartUtil.getItemOnMinecart(minecart);
+        if (item == null) return false;
         if (customWorkstationInteract(player, item)) return true;
         if (customShulkerboxInteract(player, minecart, item)) return true;
         return false;

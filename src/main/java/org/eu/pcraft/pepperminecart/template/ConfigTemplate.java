@@ -1,4 +1,4 @@
-package org.eu.pcraft.template;
+package org.eu.pcraft.pepperminecart.template;
 import lombok.Getter;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.eu.pcraft.pepperminecart.PepperMinecart;

@@ -1,4 +1,4 @@
-package org.eu.pcraft.pepperminecart;
+package org.eu.pcraft.pepperminecart.holder;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

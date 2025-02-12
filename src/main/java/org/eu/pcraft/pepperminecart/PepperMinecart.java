@@ -5,21 +5,17 @@ import dev.jorel.commandapi.arguments.ArgumentSuggestions;
 import dev.jorel.commandapi.arguments.GreedyStringArgument;
 import lombok.Getter;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.configuration.Configuration;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bstats.bukkit.Metrics;
-import org.eu.pcraft.template.ConfigTemplate;
+import org.eu.pcraft.pepperminecart.holder.MinecartChestHolder;
+import org.eu.pcraft.pepperminecart.template.ConfigTemplate;
 
 import java.util.*;
 
 public final class PepperMinecart extends JavaPlugin {
-    @Getter
-    private static Map<Material, EntityType> changeMap = new HashMap<>();
 
-    protected Map<Entity, MinecartChestHolder> holderMap = new HashMap<>();
+    Map<Entity, MinecartChestHolder> holderMap = new HashMap<>();
     @Getter
     private static PepperMinecart instance;
 
@@ -36,18 +32,13 @@ public final class PepperMinecart extends JavaPlugin {
     public void onEnable() {
         ////bStats////
         int pluginId = 21763;
-        Metrics metrics = new Metrics(this, pluginId);
+        new Metrics(this, pluginId);
 
-        ////init////
-        Bukkit.getPluginManager().registerEvents(new Listener(), this);
+        ////Init////
+        Bukkit.getPluginManager().registerEvents(new PepperListener(), this);
         instance = this;
-        changeMap.put(Material.HOPPER, EntityType.MINECART_HOPPER);
-        changeMap.put(Material.CHEST, EntityType.MINECART_CHEST);
-        changeMap.put(Material.TNT, EntityType.MINECART_TNT);
-        changeMap.put(Material.COMMAND_BLOCK, EntityType.MINECART_COMMAND);
-        changeMap.put(Material.FURNACE, EntityType.MINECART_FURNACE);
 
-        ////config////
+        ////Config////
         saveDefaultConfig();
         configTemplate.loadConfig();
 

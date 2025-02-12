@@ -1,4 +1,4 @@
 #PepperMinecart配置文件
-#byPepper
-#是否启用自定义交互(如 工作台矿车)
+#by Pepper
+#是否启用自定义交互(如 工作台矿车,潜影盒矿车)
 enableCustomInteract: true

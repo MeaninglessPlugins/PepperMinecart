@@ -94,18 +94,19 @@ public class PepperListener implements Listener {
         Minecart minecart = (Minecart) event.getRightClicked();
         Player player = event.getPlayer();
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
-        // 蹲下 交互 处理
+        ItemStack itemOnMinecart = MinecartUtil.getItemOnMinecart(minecart);
+        // 站立 交互 处理
         if (!player.isSneaking()) {
             //自定义交互
             if (PepperMinecart.getInstance().getConfigTemplate().isEnableCustomInteract()) {//允许交互
                 boolean isSuccess = doCustomInteract(player, minecart);
                 if (isSuccess) event.setCancelled(true);
             }
+            if(itemOnMinecart != null) event.setCancelled(true);
             return;
         }
-        // 站立 交互 处理
-        ItemStack itemOnMinecart = MinecartUtil.getItemOnMinecart(minecart);
-        if (!minecart.getDisplayBlockData().getMaterial().isAir()) {
+        // 下蹲 交互 处理
+        if (itemOnMinecart != null) {
             //取下物体 处理部分
             if (itemInHand.getType().isAir()) {
                 //手上为空 取下物体

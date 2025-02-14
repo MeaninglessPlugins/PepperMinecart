@@ -39,7 +39,11 @@ public class PepperListener implements Listener {
             if (holder == null) {
                 BlockStateMeta meta = (BlockStateMeta) stack.getItemMeta();
                 ShulkerBox shulkerBox = (ShulkerBox) meta.getBlockState();
-                holder = new MinecartChestHolder(shulkerBox.getInventory(), minecart);
+                
+                holder = new MinecartChestHolder(minecart);
+                Inventory inv = Bukkit.createInventory(holder, 27);
+                inv.setContents(shulkerBox.getInventory.getContents());
+                holder.setInventory(inv);
                 PepperMinecart.getInstance().holderMap.put(minecart, holder);
             }
             player.openInventory(holder.getInventory());

@@ -34,7 +34,7 @@ public class PepperListener implements Listener {
     }
 
     private boolean customShulkerboxInteract(Player player, Minecart minecart, @NotNull ItemStack stack) {
-        if (stack.getType().getKey().getKey().endsWith("_shulker_box")) {
+        if (stack.getType().getKey().getKey().endsWith("shulker_box")) {
             MinecartChestHolder holder = PepperMinecart.getInstance().holderMap.get(minecart);
             if (holder == null) {
                 BlockStateMeta meta = (BlockStateMeta) stack.getItemMeta();

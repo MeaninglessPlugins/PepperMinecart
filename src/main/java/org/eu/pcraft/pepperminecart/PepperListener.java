@@ -88,40 +88,37 @@ public class PepperListener implements Listener {
     }
 
     @EventHandler
-    void onInteract(PlayerInteractEntityEvent event) {
-        if (event.getHand() != EquipmentSlot.HAND)
+    public void onInteract(PlayerInteractEntityEvent event) {
+        if (event.getHand() != EquipmentSlot.HAND || event.getRightClicked().getType() != EntityType.MINECART) {
             return;
-        if (event.getRightClicked().getType() != EntityType.MINECART)
-            return;
+        }
+
         Minecart minecart = (Minecart) event.getRightClicked();
         Player player = event.getPlayer();
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
         ItemStack itemOnMinecart = MinecartUtil.getItemOnMinecart(minecart);
-        // 站立 交互 处理
+
+        // 站立交互处理
         if (!player.isSneaking()) {
-            //自定义交互
-            if (PepperMinecart.getInstance().getConfigTemplate().isEnableCustomInteract()) {//允许交互
-                boolean isSuccess = doCustomInteract(player, minecart);
-                if (isSuccess) event.setCancelled(true);
+            if (PepperMinecart.getInstance().getConfigTemplate().isEnableCustomInteract() && doCustomInteract(player, minecart)) {
+                event.setCancelled(true);
             }
-            if(itemOnMinecart != null) event.setCancelled(true);
+            if (itemOnMinecart != null) {
+                event.setCancelled(true);
+            }
             return;
         }
-        // 下蹲 交互 处理
+
+        // 下蹲交互处理
         if (itemOnMinecart != null) {
-            //取下物体 处理部分
             if (itemInHand.getType().isAir()) {
-                //手上为空 取下物体
                 player.getInventory().setItemInMainHand(itemOnMinecart);
                 MinecartUtil.removeBlock(minecart);
-            }
-            if (itemInHand.asOne().equals(itemOnMinecart) && itemInHand.getAmount() != itemInHand.getMaxStackSize()) {
-                //手上为车上物体 取下物体
+            } else if (itemInHand.asOne().equals(itemOnMinecart) && itemInHand.getAmount() < itemInHand.getMaxStackSize()) {
                 itemInHand.add();
                 MinecartUtil.removeBlock(minecart);
             }
         } else if (itemInHand.getType().isBlock()) {
-            //是方块 可以被放置
             ItemStack copyItem = itemInHand.asOne().clone();
             itemInHand.subtract(1);
             MinecartUtil.placeBlock(minecart, copyItem);

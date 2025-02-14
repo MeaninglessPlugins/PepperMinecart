@@ -100,12 +100,12 @@ public class PepperListener implements Listener {
 
         // 站立交互处理
         if (!player.isSneaking()) {
-            if (PepperMinecart.getInstance().getConfigTemplate().isEnableCustomInteract() && doCustomInteract(player, minecart)) {
-                event.setCancelled(true);
+            //自定义交互
+            if (PepperMinecart.getInstance().getConfigTemplate().isEnableCustomInteract()) {//允许交互
+                boolean isSuccess = doCustomInteract(player, minecart);
+                if (isSuccess) event.setCancelled(true);
             }
-            if (itemOnMinecart != null) {
-                event.setCancelled(true);
-            }
+            if(itemOnMinecart != null) event.setCancelled(true);
             return;
         }
 

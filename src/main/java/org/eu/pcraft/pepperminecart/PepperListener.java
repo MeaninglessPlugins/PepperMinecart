@@ -70,8 +70,10 @@ public class PepperListener implements Listener {
     @EventHandler
     void onCloseInv(InventoryCloseEvent event) {
         if (event.getInventory().getHolder() instanceof MinecartChestHolder) {
+            System.out.println(1);
             if (event.getInventory().getViewers().isEmpty()) {
                 //destroy holder
+                System.out.println(2);
                 Minecart minecart = ((MinecartChestHolder) event.getInventory().getHolder()).getMinecart();
                 ItemStack boxItem = MinecartUtil.getItemOnMinecart(minecart);
                 BlockStateMeta meta = (BlockStateMeta) boxItem.getItemMeta();

@@ -7,8 +7,11 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 
 @Getter
-@AllArgsConstructor
 public class MinecartChestHolder implements InventoryHolder {
+    @Setter
     private Inventory inventory;
     Minecart minecart;
+    public MinecartChestHolder (Minecart m) {
+        minecart = m;
+    }
 }

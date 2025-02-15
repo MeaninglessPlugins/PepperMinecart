@@ -84,7 +84,7 @@ public class PepperListener implements Listener {
         }
         MinecartChestHolder holder = PepperMinecart.getInstance().holderMap.get(minecart);
         if (holder != null){
-            for(Player p : holder.getInventory().getViewers()){
+            for(HumanEntity p : holder.getInventory().getViewers()){
                 p.closeInventory();
             }
             //closeHolder(holder);

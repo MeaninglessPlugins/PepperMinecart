@@ -82,7 +82,7 @@ public class PepperListener implements Listener {
         if (!(event.getVehicle() instanceof Minecart minecart)) {
             return;
         }
-        PepperMinecartHolder holder = PepperMinecart.getInstance().holderMap.get(minecart);
+        MinecartChestHolder holder = PepperMinecart.getInstance().holderMap.get(minecart);
         if (holder != null){
             for(Player p : holder.getInventory().getViewers()){
                 p.closeInventory();

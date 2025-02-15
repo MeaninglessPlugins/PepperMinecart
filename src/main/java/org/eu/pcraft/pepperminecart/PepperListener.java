@@ -27,6 +27,7 @@ import java.util.function.Consumer;
 public class PepperListener implements Listener {
 
     private void closeHolder(MinecartChestHolder holder){
+        System.out.println(1);
         Minecart minecart = holder.getMinecart();
         ItemStack boxItem = MinecartUtil.getItemOnMinecart(minecart);
         BlockStateMeta meta = (BlockStateMeta) boxItem.getItemMeta();
@@ -51,9 +52,12 @@ public class PepperListener implements Listener {
     }
 
     private boolean customShulkerboxInteract(Player player, Minecart minecart, @NotNull ItemStack stack) {
+        System.out.println(2);
         if (stack.getType().getKey().getKey().endsWith("shulker_box")) {
             MinecartChestHolder holder = PepperMinecart.getInstance().holderMap.get(minecart);
+            System.out.println(3);
             if (holder == null) {
+                System.out.println(4);
                 BlockStateMeta meta = (BlockStateMeta) stack.getItemMeta();
                 ShulkerBox shulkerBox = (ShulkerBox) meta.getBlockState();
                 
@@ -97,7 +101,11 @@ public class PepperListener implements Listener {
 
     @EventHandler
     void onCloseInv(InventoryCloseEvent event) {
+        System.out.println(7);
+        System.out.println(event.getInventory().getHolder());
         if (event.getInventory().getHolder() instanceof MinecartChestHolder holder) {
+            System.out.println(8);
+            System.out.println(event.getInventory().getViewers());
             if (event.getInventory().getViewers().isEmpty()) {
                 //destroy holder
                 closeHolder(holder);

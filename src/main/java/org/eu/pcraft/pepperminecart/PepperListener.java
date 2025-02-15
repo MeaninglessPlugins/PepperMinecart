@@ -98,7 +98,7 @@ public class PepperListener implements Listener {
     @EventHandler
     void onCloseInv(InventoryCloseEvent event) {
         if (event.getInventory().getHolder() instanceof MinecartChestHolder holder) {
-            if (event.getInventory().getViewers().isEmpty()) {
+            if (event.getInventory().getViewers().size() <= 1) {
                 //destroy holder
                 closeHolder(holder);
             }

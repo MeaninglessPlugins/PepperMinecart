@@ -18,6 +18,7 @@ import org.eu.pcraft.pepperminecart.holder.MinecartChestHolder;
 import org.eu.pcraft.pepperminecart.util.MinecartUtil;
 import org.jetbrains.annotations.NotNull;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.Inventory;
 
 import java.util.function.Consumer;

@@ -23,6 +23,20 @@ import java.util.function.Consumer;
 
 public class PepperListener implements Listener {
 
+    private void closeHolder(MinecartChestHolder holder){
+        Minecart minecart = holder.getMinecart();
+        ItemStack boxItem = MinecartUtil.getItemOnMinecart(minecart);
+        BlockStateMeta meta = (BlockStateMeta) boxItem.getItemMeta();
+        ShulkerBox shulkerBox = (ShulkerBox) meta.getBlockState();
+        shulkerBox.getInventory().setContents(holder.getInventory().getContents());
+        meta.setBlockState(shulkerBox);
+        boxItem.setItemMeta(meta);
+        NBT.modifyPersistentData(minecart, nbt -> {
+            nbt.setItemStack("BlockInfo", boxItem);
+        });
+        PepperMinecart.getInstance().holderMap.remove(minecart);
+    }
+    
     private boolean customWorkstationInteract(Player player, @NotNull ItemStack stack) {
         Material type = stack.getType();
         Consumer<Player> consumer = MinecartUtil.getBlockIntercations().get(type);
@@ -66,6 +80,13 @@ public class PepperListener implements Listener {
         if (!(event.getVehicle() instanceof Minecart minecart)) {
             return;
         }
+        PepperMinecartHolder holder = PepperMinecart.getInstance().holderMap.get(minecart);
+        if (holder != null){
+            for(Player p : holder.getInventory().getViewers()){
+                p.closeInventory();
+            }
+            //closeHolder(holder);
+        }
         ItemStack item = MinecartUtil.getItemOnMinecart(minecart);
         if (item != null)
             minecart.getWorld().dropItem(minecart.getLocation(), item);
@@ -73,20 +94,10 @@ public class PepperListener implements Listener {
 
     @EventHandler
     void onCloseInv(InventoryCloseEvent event) {
-        if (event.getInventory().getHolder() instanceof MinecartChestHolder) {
+        if (event.getInventory().getHolder() instanceof MinecartChestHolder holder) {
             if (event.getInventory().getViewers().isEmpty()) {
                 //destroy holder
-                Minecart minecart = ((MinecartChestHolder) event.getInventory().getHolder()).getMinecart();
-                ItemStack boxItem = MinecartUtil.getItemOnMinecart(minecart);
-                BlockStateMeta meta = (BlockStateMeta) boxItem.getItemMeta();
-                ShulkerBox shulkerBox = (ShulkerBox) meta.getBlockState();
-                shulkerBox.getInventory().setContents(event.getInventory().getContents());
-                meta.setBlockState(shulkerBox);
-                boxItem.setItemMeta(meta);
-                NBT.modifyPersistentData(minecart, nbt -> {
-                    nbt.setItemStack("BlockInfo", boxItem);
-                });
-                PepperMinecart.getInstance().holderMap.remove(minecart);
+                closeHolder(holder);
             }
         }
     }

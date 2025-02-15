@@ -17,6 +17,8 @@ import org.bukkit.inventory.meta.BlockStateMeta;
 import org.eu.pcraft.pepperminecart.holder.MinecartChestHolder;
 import org.eu.pcraft.pepperminecart.util.MinecartUtil;
 import org.jetbrains.annotations.NotNull;
+import org.bukkit.Bukkit;
+import org.bukkit.inventory.Inventory;
 
 import java.util.function.Consumer;
 
@@ -56,7 +58,7 @@ public class PepperListener implements Listener {
                 
                 holder = new MinecartChestHolder(minecart);
                 Inventory inv = Bukkit.createInventory(holder, 27);
-                inv.setContents(shulkerBox.getInventory.getContents());
+                inv.setContents(shulkerBox.getInventory().getContents());
                 holder.setInventory(inv);
                 PepperMinecart.getInstance().holderMap.put(minecart, holder);
             }

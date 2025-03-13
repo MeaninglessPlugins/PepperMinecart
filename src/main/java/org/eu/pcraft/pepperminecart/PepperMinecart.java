@@ -9,8 +9,8 @@ import org.bukkit.entity.Entity;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bstats.bukkit.Metrics;
 import org.eu.pcraft.pepperminecart.holder.MinecartChestHolder;
-import org.eu.pcraft.pepperminecart.config.ConfigManager;  
-import org.eu.pcraft.pepperminecart.config.PepperConfigModule;  
+import org.eu.pcraft.pepperminecart.config.ConfigManager;
+import org.eu.pcraft.pepperminecart.config.PepperConfigModule;
 
 import java.util.*;
 

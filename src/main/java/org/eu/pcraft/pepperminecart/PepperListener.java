@@ -72,7 +72,7 @@ public class PepperListener implements Listener {
     private boolean doCustomInteract(Player player, Minecart minecart) {
         //自定义交互
         ItemStack item = MinecartUtil.getItemOnMinecart(minecart);
-        if (item == null) return false;
+        if (item == null) return false;  
         if (customWorkstationInteract(player, item)) return true;
         if (customShulkerboxInteract(player, minecart, item)) return true;
         return false;
@@ -117,9 +117,9 @@ public class PepperListener implements Listener {
         ItemStack itemOnMinecart = MinecartUtil.getItemOnMinecart(minecart);
 
         // 站立交互处理
-        if (!player.isSneaking()) {
+        if (!player.isSneaking()) {  
             //自定义交互
-            if (PepperMinecart.getInstance().getConfigTemplate().isEnableCustomInteract()) {//允许交互
+            if (PepperMinecart.getInstance().getMainConfig().getEnableCustomInteract()) {//允许交互
                 boolean isSuccess = doCustomInteract(player, minecart);
                 if (isSuccess) event.setCancelled(true);
             }

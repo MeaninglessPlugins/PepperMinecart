@@ -5,7 +5,7 @@ import org.eu.pcraft.pepperminecart.utils.Interval;
 import org.eu.pcraft.pepperminecart.utils.IntervalSerializer;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.ConfigurateException;
-import org.spongepowered.configurate.yaml.NodeStyle;  
+import org.spongepowered.configurate.yaml.NodeStyle;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 import io.leangen.geantyref.TypeToken;
 

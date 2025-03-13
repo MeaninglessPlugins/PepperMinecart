@@ -2,14 +2,15 @@ package org.eu.pcraft.pepperminecart;
 
 import dev.jorel.commandapi.*;
 import dev.jorel.commandapi.arguments.ArgumentSuggestions;
-import dev.jorel.commandapi.arguments.GreedyStringArgument;
+import dev.jorel.commandapi.arguments.GreedyStringArgument;  
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bstats.bukkit.Metrics;
 import org.eu.pcraft.pepperminecart.holder.MinecartChestHolder;
-import org.eu.pcraft.pepperminecart.template.ConfigTemplate;
+import org.eu.pcraft.pepperminecart.config.ConfigManager;  
+import org.eu.pcraft.pepperminecart.config.PepperConfigModule;  
 
 import java.util.*;
 
@@ -20,12 +21,18 @@ public final class PepperMinecart extends JavaPlugin {
     private static PepperMinecart instance;
 
     @Getter
-    private final ConfigTemplate configTemplate = new ConfigTemplate();
-
+    private ConfigManager<MainConfigModule> configManager;
+    @Getter
+    public MainConfigModule mainConfig = new MainConfigModule();  
 
     @Override
     public void onLoad() {
-        CommandAPI.onLoad(new CommandAPIBukkitConfig(this).silentLogs(true));
+        Path dataPath = getDataFolder().toPath();
+
+        //load
+        configManager=new ConfigManager<>(dataPath.resolve("config.yml"), mainConfig);  
+        configManager.loadConfig();
+        CommandAPI.onLoad(new CommandAPIBukkitConfig(this).silentLogs(true));  
     }
 
     @Override
@@ -35,12 +42,8 @@ public final class PepperMinecart extends JavaPlugin {
         new Metrics(this, pluginId);
 
         ////Init////
-        Bukkit.getPluginManager().registerEvents(new PepperListener(), this);
+        Bukkit.getPluginManager().registerEvents(new PepperListener(), this);  
         instance = this;
-
-        ////Config////
-        saveDefaultConfig();
-        configTemplate.loadConfig();
 
         ////Commands////
         CommandAPI.onEnable();
@@ -56,8 +59,7 @@ public final class PepperMinecart extends JavaPlugin {
                 .executes((sender, args) -> {
                     if(Objects.equals(args.get("subCommand"), "reload")){
                         sender.sendMessage("[PepperMinecart] reloading...");
-                        this.reloadConfig();
-                        configTemplate.loadConfig();
+                        configManager.loadConfig();  
                         sender.sendMessage("[PepperMinecart] Done!");
                     }
                 })

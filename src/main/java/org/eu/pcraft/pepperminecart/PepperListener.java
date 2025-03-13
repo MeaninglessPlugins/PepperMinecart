@@ -92,7 +92,7 @@ public class PepperListener implements Listener {
         }
         ItemStack item = MinecartUtil.getItemOnMinecart(minecart);
         if (item != null)
-            minecart.getWorld().dropItem(minecart.getLocation(), item);  
+            minecart.getWorld().dropItem(minecart.getLocation(), item);
     }
 
     @EventHandler

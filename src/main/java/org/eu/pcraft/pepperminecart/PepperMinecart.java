@@ -2,7 +2,7 @@ package org.eu.pcraft.pepperminecart;
 
 import dev.jorel.commandapi.*;
 import dev.jorel.commandapi.arguments.ArgumentSuggestions;
-import dev.jorel.commandapi.arguments.GreedyStringArgument;  
+import dev.jorel.commandapi.arguments.GreedyStringArgument;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
@@ -59,7 +59,7 @@ public final class PepperMinecart extends JavaPlugin {
                 .executes((sender, args) -> {
                     if(Objects.equals(args.get("subCommand"), "reload")){
                         sender.sendMessage("[PepperMinecart] reloading...");
-                        configManager.loadConfig();  
+                        configManager.loadConfig();
                         sender.sendMessage("[PepperMinecart] Done!");
                     }
                 })

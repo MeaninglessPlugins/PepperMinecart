@@ -23,16 +23,16 @@ public final class PepperMinecart extends JavaPlugin {
     @Getter
     private ConfigManager<MainConfigModule> configManager;
     @Getter
-    public MainConfigModule mainConfig = new MainConfigModule();  
+    public MainConfigModule mainConfig = new MainConfigModule();
 
     @Override
     public void onLoad() {
         Path dataPath = getDataFolder().toPath();
 
         //load
-        configManager=new ConfigManager<>(dataPath.resolve("config.yml"), mainConfig);  
+        configManager=new ConfigManager<>(dataPath.resolve("config.yml"), mainConfig);
         configManager.loadConfig();
-        CommandAPI.onLoad(new CommandAPIBukkitConfig(this).silentLogs(true));  
+        CommandAPI.onLoad(new CommandAPIBukkitConfig(this).silentLogs(true));
     }
 
     @Override
@@ -42,7 +42,7 @@ public final class PepperMinecart extends JavaPlugin {
         new Metrics(this, pluginId);
 
         ////Init////
-        Bukkit.getPluginManager().registerEvents(new PepperListener(), this);  
+        Bukkit.getPluginManager().registerEvents(new PepperListener(), this);
         instance = this;
 
         ////Commands////

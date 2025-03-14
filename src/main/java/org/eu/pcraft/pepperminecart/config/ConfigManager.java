@@ -1,8 +1,8 @@
 package org.eu.pcraft.pepperminecart.config;
 
 import lombok.Getter;
-import org.eu.pcraft.pepperminecart.utils.Interval;
-import org.eu.pcraft.pepperminecart.utils.IntervalSerializer;
+//import org.eu.pcraft.pepperminecart.utils.Interval;
+//import org.eu.pcraft.pepperminecart.utils.IntervalSerializer;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.yaml.NodeStyle;

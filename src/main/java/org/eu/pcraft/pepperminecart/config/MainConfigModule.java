@@ -11,5 +11,5 @@ import java.util.Map;
 @ConfigSerializable
 public class MainConfigModule {
     @Getter
-    boolean enableCustomInteract = true;
+    public boolean enableCustomInteract = true;
 }

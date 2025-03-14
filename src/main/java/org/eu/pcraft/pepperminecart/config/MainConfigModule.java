@@ -8,8 +8,8 @@ import org.spongepowered.configurate.objectmapping.meta.Comment;
 import java.util.List;
 import java.util.Map;
 
-@Getter
 @ConfigSerializable
 public class MainConfigModule {
+    @Getter
     boolean enableCustomInteract = true;
 }

@@ -1,5 +1,6 @@
 package org.eu.pcraft.pepperminecart;
 
+import java.nio.file.Path;
 import dev.jorel.commandapi.*;
 import dev.jorel.commandapi.arguments.ArgumentSuggestions;
 import dev.jorel.commandapi.arguments.GreedyStringArgument;

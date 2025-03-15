@@ -29,9 +29,8 @@ public final class PepperMinecart extends JavaPlugin {
     @Override
     public void onLoad() {
         Path dataPath = getDataFolder().toPath();
-
         //load
-        configManager=new ConfigManager<>(dataPath.resolve("config.yml"), mainConfig);
+        configManager = new ConfigManager<>(dataPath.resolve("config.yml"), mainConfig);
         configManager.loadConfig();
         CommandAPI.onLoad(new CommandAPIBukkitConfig(this).silentLogs(true));
     }
@@ -59,7 +58,9 @@ public final class PepperMinecart extends JavaPlugin {
                 .withAliases("pm", "minecart")
                 .executes((sender, args) -> {
                     if(Objects.equals(args.get("subCommand"), "reload")){
-                        sender.sendMessage("[PepperMinecart] reloading...");
+                        sender.sendMessage("[PepperMinecart] Reloading...");
+                        Path dataPath = getDataFolder().toPath();
+                        configManager = new ConfigManager<>(dataPath.resolve("config.yml"), mainConfig);
                         configManager.loadConfig();
                         sender.sendMessage("[PepperMinecart] Done!");
                     }

@@ -42,7 +42,7 @@ public class PepperListener implements Listener {
     
     private boolean customWorkstationInteract(Player player, @NotNull ItemStack stack) {
         Material type = stack.getType();
-        Consumer<Player> consumer = MinecartUtil.getBlockIntercations().get(type);
+        Consumer<Player> consumer = MinecartUtil.getBlockInteractions().get(type);
         if (consumer != null) {
             consumer.accept(player);
             return true;
@@ -119,7 +119,7 @@ public class PepperListener implements Listener {
         // 站立交互处理
         if (!player.isSneaking()) {
             //自定义交互
-            if (PepperMinecart.getInstance().getMainConfig().getEnableCustomInteract()) {//允许交互
+            if (PepperMinecart.getInstance().getMainConfig().isEnableCustomInteract()) {//允许交互
                 boolean isSuccess = doCustomInteract(player, minecart);
                 if (isSuccess) event.setCancelled(true);
             }

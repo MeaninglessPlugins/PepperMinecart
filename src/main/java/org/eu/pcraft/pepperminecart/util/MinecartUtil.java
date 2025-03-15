@@ -20,7 +20,7 @@ public final class MinecartUtil {
     @Getter
     private static final EnumMap<Material, EntityType> entityTransformations = new EnumMap<>(Material.class);
     @Getter
-    private static final Map<Material, Consumer<Player>> blockIntercations = new EnumMap<>(Material.class);
+    private static final Map<Material, Consumer<Player>> blockInteractions = new EnumMap<>(Material.class);
     static {
         //Entity Transformations Map
         entityTransformations.put(Material.HOPPER, EntityType.MINECART_HOPPER);
@@ -30,12 +30,12 @@ public final class MinecartUtil {
         entityTransformations.put(Material.FURNACE, EntityType.MINECART_FURNACE);
 
         //Block Interactions Map
-        blockIntercations.put(Material.CRAFTING_TABLE, p -> p.openWorkbench(null, true));
-        blockIntercations.put(Material.GRINDSTONE, p -> p.openGrindstone(null, true));
-        blockIntercations.put(Material.LOOM, p -> p.openLoom(null, true));
-        blockIntercations.put(Material.CARTOGRAPHY_TABLE, p -> p.openCartographyTable(null, true));
-        blockIntercations.put(Material.SMITHING_TABLE, p -> p.openSmithingTable(null, true));
-        blockIntercations.put(Material.STONECUTTER, p -> p.openStonecutter(null, true));
+        blockInteractions.put(Material.CRAFTING_TABLE, p -> p.openWorkbench(null, true));
+        blockInteractions.put(Material.GRINDSTONE, p -> p.openGrindstone(null, true));
+        blockInteractions.put(Material.LOOM, p -> p.openLoom(null, true));
+        blockInteractions.put(Material.CARTOGRAPHY_TABLE, p -> p.openCartographyTable(null, true));
+        blockInteractions.put(Material.SMITHING_TABLE, p -> p.openSmithingTable(null, true));
+        blockInteractions.put(Material.STONECUTTER, p -> p.openStonecutter(null, true));
     }
     public static ItemStack getItemOnMinecart(Minecart minecart){
         return NBT.getPersistentData(minecart, nbt ->

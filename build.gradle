@@ -38,8 +38,8 @@ dependencies {
     include "dev.jorel:commandapi-bukkit-shade:9.7.0"
     include 'org.bstats:bstats-bukkit:3.0.2'
 
-    implementation 'org.spongepowered:configurate-yaml:4.2.0-SNAPSHOT'
-    implementation 'org.spongepowered:configurate-core:4.2.0-SNAPSHOT'
+    include 'org.spongepowered:configurate-yaml:4.2.0-SNAPSHOT'
+    include 'org.spongepowered:configurate-core:4.2.0-SNAPSHOT'
     
     testImplementation platform('org.junit:junit-bom:5.9.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
@@ -77,7 +77,7 @@ shadowJar {
         relocate("dev.jorel.commandapi", "org.eu.pcraft.pepperminecart.commandapi")
         relocate("org.bstats", "org.eu.pcraft.pepperminecart")
         relocate("de.tr7zw.changeme.nbtapi", "org.eu.pcraft.pepperminecart.nbtapi")
-        relocate("org.spongepowered","org.eu.pcraft.pepperminecart")
+        //relocate("org.spongepowered","org.eu.pcraft.pepperminecart.org.spongepowered")
     }
     manifest {
 //        attributes["paperweight-mappings-namespace"] = "spigot"

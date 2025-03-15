@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 @ConfigSerializable
+@Getter
 public class MainConfigModule {
-    @Getter
     public boolean enableCustomInteract = true;
 }

@@ -32,6 +32,7 @@ public final class PepperMinecart extends JavaPlugin {
         //load
         configManager = new ConfigManager<>(dataPath.resolve("config.yml"), mainConfig);
         configManager.loadConfig();
+        this.mainConfig = configManager.getConfigModule();
         CommandAPI.onLoad(new CommandAPIBukkitConfig(this).silentLogs(true));
     }
 

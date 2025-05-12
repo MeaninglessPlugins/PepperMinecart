@@ -36,7 +36,7 @@ dependencies {
 
     include "de.tr7zw:item-nbt-api:2.15.0"
     include "dev.jorel:commandapi-bukkit-shade:10.0.0"
-    include 'org.bstats:bstats-bukkit:3.0.2'
+    include 'org.bstats:bstats-bukkit:3.1.0'
 
     include 'org.spongepowered:configurate-yaml:4.3.0-SNAPSHOT'
     include 'org.spongepowered:configurate-core:4.3.0-SNAPSHOT'

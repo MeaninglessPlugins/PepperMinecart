@@ -34,7 +34,7 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.30'
     annotationProcessor 'org.projectlombok:lombok:1.18.30'
 
-    include "de.tr7zw:item-nbt-api:2.14.1"
+    include "de.tr7zw:item-nbt-api:2.15.0"
     include "dev.jorel:commandapi-bukkit-shade:10.0.0"
     include 'org.bstats:bstats-bukkit:3.0.2'
 

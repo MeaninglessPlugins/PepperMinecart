@@ -31,8 +31,8 @@ configurations {
 dependencies {
     compileOnly "com.destroystokyo.paper:paper-api:1.16.5-R0.1-SNAPSHOT"
 
-    compileOnly 'org.projectlombok:lombok:1.18.30'
-    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+    compileOnly 'org.projectlombok:lombok:1.18.40'
+    annotationProcessor 'org.projectlombok:lombok:1.18.40'
 
     include "de.tr7zw:item-nbt-api:2.15.0"
     include "dev.jorel:commandapi-bukkit-shade:10.0.1"

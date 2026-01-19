@@ -1,8 +1,6 @@
 package org.eu.pcraft.pepperminecart;
 
-import de.tr7zw.changeme.nbtapi.NBT;
 import org.bukkit.Material;
-import org.bukkit.block.ShulkerBox;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Player;
@@ -13,100 +11,39 @@ import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.BlockStateMeta;
 import org.eu.pcraft.pepperminecart.holder.MinecartChestHolder;
-import org.eu.pcraft.pepperminecart.util.MinecartUtil;
-import org.jetbrains.annotations.NotNull;
-import org.bukkit.Bukkit;
-import org.bukkit.entity.HumanEntity;
-import org.bukkit.inventory.Inventory;
-
-import java.util.function.Consumer;
-
+import org.eu.pcraft.pepperminecart.manager.MinecartManager;
 
 public class PepperListener implements Listener {
 
-    private void closeHolder(MinecartChestHolder holder){
-        Minecart minecart = holder.getMinecart();
-        ItemStack boxItem = MinecartUtil.getItemOnMinecart(minecart);
-        BlockStateMeta meta = (BlockStateMeta) boxItem.getItemMeta();
-        ShulkerBox shulkerBox = (ShulkerBox) meta.getBlockState();
-        shulkerBox.getInventory().setContents(holder.getInventory().getContents());
-        meta.setBlockState(shulkerBox);
-        boxItem.setItemMeta(meta);
-        NBT.modifyPersistentData(minecart, nbt -> {
-            nbt.setItemStack("BlockInfo", boxItem);
-        });
-        PepperMinecart.getInstance().holderMap.remove(minecart);
-    }
-    
-    private boolean customWorkstationInteract(Player player, @NotNull ItemStack stack) {
-        Material type = stack.getType();
-        Consumer<Player> consumer = MinecartUtil.getBlockInteractions().get(type);
-        if (consumer != null) {
-            consumer.accept(player);
-            return true;
-        }
-        return false;
-    }
+    private final MinecartManager manager;
+    private final PepperMinecart plugin;
 
-    private boolean customShulkerboxInteract(Player player, Minecart minecart, @NotNull ItemStack stack) {
-        if (stack.getType().getKey().getKey().endsWith("shulker_box")) {
-            MinecartChestHolder holder = PepperMinecart.getInstance().holderMap.get(minecart);
-            if (holder == null) {
-                BlockStateMeta meta = (BlockStateMeta) stack.getItemMeta();
-                ShulkerBox shulkerBox = (ShulkerBox) meta.getBlockState();
-                
-                holder = new MinecartChestHolder(minecart);
-                Inventory inv = Bukkit.createInventory(holder, 27);
-                inv.setContents(shulkerBox.getInventory().getContents());
-                holder.setInventory(inv);
-                PepperMinecart.getInstance().holderMap.put(minecart, holder);
-            }
-            player.openInventory(holder.getInventory());
-            return true;
-        }
-        return false;
-    }
-
-    private boolean doCustomInteract(Player player, Minecart minecart) {
-        //自定义交互
-        ItemStack item = MinecartUtil.getItemOnMinecart(minecart);
-        if (item == null) return false;
-        if (customWorkstationInteract(player, item)) return true;
-        if (customShulkerboxInteract(player, minecart, item)) return true;
-        return false;
+    public PepperListener(PepperMinecart plugin) {
+        this.plugin = plugin;
+        this.manager = new MinecartManager(plugin);
     }
 
     @EventHandler
-    void onDestroy(VehicleDestroyEvent event) {
-        if (!(event.getVehicle() instanceof Minecart minecart)) {
-            return;
+    public void onDestroy(VehicleDestroyEvent event) {
+        if (event.getVehicle() instanceof Minecart minecart) {
+            manager.handleCartDestruction(minecart);
         }
-        MinecartChestHolder holder = PepperMinecart.getInstance().holderMap.get(minecart);
-        if (holder != null){
-            for(HumanEntity p : holder.getInventory().getViewers()){
-                p.closeInventory();
-            }
-            //closeHolder(holder);
-        }
-        ItemStack item = MinecartUtil.getItemOnMinecart(minecart);
-        if (item != null)
-            minecart.getWorld().dropItem(minecart.getLocation(), item);
     }
 
     @EventHandler
-    void onCloseInv(InventoryCloseEvent event) {
+    public void onCloseInv(InventoryCloseEvent event) {
         if (event.getInventory().getHolder() instanceof MinecartChestHolder holder) {
+            // 当最后一个人关闭界面时，保存并销毁 holder
             if (event.getInventory().getViewers().size() <= 1) {
-                //destroy holder
-                closeHolder(holder);
+                manager.saveAndCloseShulkerBox(holder);
             }
         }
     }
 
     @EventHandler
     public void onInteract(PlayerInteractEntityEvent event) {
+        // 非主手 或 非矿车
         if (event.getHand() != EquipmentSlot.HAND || event.getRightClicked().getType() != EntityType.MINECART) {
             return;
         }
@@ -114,32 +51,54 @@ public class PepperListener implements Listener {
         Minecart minecart = (Minecart) event.getRightClicked();
         Player player = event.getPlayer();
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
-        ItemStack itemOnMinecart = MinecartUtil.getItemOnMinecart(minecart);
+        ItemStack itemOnMinecart = manager.getItemOnMinecart(minecart);
 
-        // 站立交互处理
-        if (!player.isSneaking()) {
-            //自定义交互
-            if (PepperMinecart.getInstance().getMainConfig().isEnableCustomInteract()) {//允许交互
-                boolean isSuccess = doCustomInteract(player, minecart);
-                if (isSuccess) event.setCancelled(true);
-            }
-            if(itemOnMinecart != null) event.setCancelled(true);
-            return;
+        if (player.isSneaking()) {
+            handleSneakInteract(event, player, minecart, itemInHand, itemOnMinecart);
+        } else {
+            handleStandInteract(event, player, minecart, itemOnMinecart);
         }
+    }
 
-        // 下蹲交互处理
+
+    private void handleStandInteract(PlayerInteractEntityEvent event, Player player, Minecart minecart, ItemStack itemOnMinecart) {
+        // 如果不允许自定义交互，直接返回
+        if (!plugin.getMainConfig().isEnableCustomInteract()) return;
+
         if (itemOnMinecart != null) {
+            // 尝试打开工作台或潜影盒
+            boolean handled = manager.handleWorkstationInteract(player, itemOnMinecart)
+                    || manager.handleShulkerBoxInteract(player, minecart, itemOnMinecart);
+
+            // 如果成功交互，或者上面有方块，都应该取消事件
+            if (handled || itemOnMinecart.getType() != Material.AIR) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    private void handleSneakInteract(PlayerInteractEntityEvent event, Player player, Minecart minecart, ItemStack itemInHand, ItemStack itemOnMinecart) {
+        // 情况1：车上有方块
+        if (itemOnMinecart != null) {
+            // 手空 -> 取下方块
             if (itemInHand.getType().isAir()) {
                 player.getInventory().setItemInMainHand(itemOnMinecart);
-                MinecartUtil.removeBlock(minecart);
-            } else if (itemInHand.asOne().equals(itemOnMinecart) && itemInHand.getAmount() < itemInHand.getMaxStackSize()) {
-                itemInHand.add();
-                MinecartUtil.removeBlock(minecart);
+                manager.removeBlock(minecart);
+                event.setCancelled(true);
             }
-        } else if (itemInHand.getType().isBlock()) {
+            // 手中物品相同且未堆叠满 -> 回收方块
+            else if (itemInHand.asOne().equals(itemOnMinecart) && itemInHand.getAmount() < itemInHand.getMaxStackSize()) {
+                itemInHand.setAmount(itemInHand.getAmount() + 1);
+                manager.removeBlock(minecart);
+                event.setCancelled(true);
+            }
+        }
+        // 情况2：车上没方块，手上有方块 -> 放置方块
+        else if (itemInHand.getType().isBlock()) {
             ItemStack copyItem = itemInHand.asOne().clone();
             itemInHand.subtract(1);
-            MinecartUtil.placeBlock(minecart, copyItem);
+            manager.placeBlock(minecart, copyItem);
+            event.setCancelled(true);
         }
     }
 }

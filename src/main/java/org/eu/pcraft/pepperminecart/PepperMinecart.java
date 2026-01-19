@@ -17,6 +17,7 @@ import java.util.*;
 
 public final class PepperMinecart extends JavaPlugin {
 
+    @Getter
     Map<Entity, MinecartChestHolder> holderMap = new HashMap<>();
     @Getter
     private static PepperMinecart instance;
@@ -33,7 +34,7 @@ public final class PepperMinecart extends JavaPlugin {
         configManager = new ConfigManager<>(dataPath.resolve("config.yml"), mainConfig);
         configManager.loadConfig();
         this.mainConfig = configManager.getConfigModule();
-        CommandAPI.onLoad(new CommandAPIBukkitConfig(this).silentLogs(true));
+        CommandAPI.onLoad(new CommandAPISpigotConfig(this).silentLogs(true));
     }
 
     @Override
@@ -43,7 +44,7 @@ public final class PepperMinecart extends JavaPlugin {
         new Metrics(this, pluginId);
 
         ////Init////
-        Bukkit.getPluginManager().registerEvents(new PepperListener(), this);
+        Bukkit.getPluginManager().registerEvents(new PepperListener(instance), this);
         instance = this;
 
         ////Commands////

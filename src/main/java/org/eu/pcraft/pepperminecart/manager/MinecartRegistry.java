@@ -1,5 +1,7 @@
 package org.eu.pcraft.pepperminecart.manager;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -13,8 +15,8 @@ import java.util.function.Consumer;
  */
 public class MinecartRegistry {
 
-    private static final EnumMap<Material, EntityType> entityTransformations = new EnumMap<>(Material.class);
-    private static final Map<Material, Consumer<Player>> blockInteractions = new EnumMap<>(Material.class);
+    private static final BiMap<Material, EntityType> entityTransformations = HashBiMap.create();
+    private static final BiMap<Material, Consumer<Player>> blockInteractions = HashBiMap.create();
 
     static {
         // 实体转换映射 (方块 -> 对应矿车类型)
@@ -35,6 +37,9 @@ public class MinecartRegistry {
 
     public static EntityType getTransformation(Material material) {
         return entityTransformations.get(material);
+    }
+    public static Material getTransformation(EntityType entityType) {
+        return entityTransformations.inverse().get(entityType);
     }
 
     public static Consumer<Player> getInteraction(Material material) {

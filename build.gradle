@@ -1,3 +1,5 @@
+import xyz.jpenilla.runtask.task.AbstractRun
+
 plugins {
     id("com.gradleup.shadow") version "8.3.3"
     id 'java'
@@ -6,7 +8,7 @@ plugins {
 }
 
 group = 'org.eu.pcraft'
-version = '1.4'
+version = '1.5'
 
 repositories {
     mavenCentral()
@@ -19,25 +21,12 @@ repositories {
     maven {
         url "https://repo.codemc.io/repository/maven-public/"
     }
-    maven {
-        url "https://oss.sonatype.org/content/repositories/snapshots/"
-    }
 }
 
 configurations {
     include
     implementation.extendsFrom(include)
-
-    // 创建独立的配置用于不同的映射
-    includeMojang
-    includeSpigot
-
-    // 用于编译的配置
-    compileOnly.extendsFrom(include)
 }
-
-// 使用一个变量来切换映射类型
-def useMojangMapping = project.hasProperty('mojang')
 
 dependencies {
     compileOnly "com.destroystokyo.paper:paper-api:1.16.5-R0.1-SNAPSHOT"
@@ -45,22 +34,11 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.30'
     annotationProcessor 'org.projectlombok:lombok:1.18.30'
 
-    // 公共依赖
-    include "de.tr7zw:item-nbt-api:2.15.5"
+    include "de.tr7zw:item-nbt-api:2.15.0"
     include 'org.bstats:bstats-bukkit:3.0.2'
+
     include 'org.spongepowered:configurate-yaml:4.3.0-SNAPSHOT'
     include 'org.spongepowered:configurate-core:4.3.0-SNAPSHOT'
-
-    // 根据编译时参数选择使用哪个版本的CommandAPI
-    if (useMojangMapping) {
-        // Mojang映射使用新版CommandAPI
-        compileOnly "dev.jorel:commandapi-paper-shade:11.1.0"
-        includeMojang "dev.jorel:commandap-paper-shade:11.1.0"
-    } else {
-        // Spigot映射使用旧版CommandAPI
-        compileOnly "dev.jorel:commandapi-spigot-shade:11.1.0"
-        includeSpigot "dev.jorel:commandapi-spigot-shade:11.1.0"
-    }
 
     testImplementation platform('org.junit:junit-bom:5.9.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
@@ -70,7 +48,11 @@ test {
     useJUnitPlatform()
 }
 
-java {
+build {
+    dependsOn(shadowJar)
+}
+
+java{
     toolchain.languageVersion.set(JavaLanguageVersion.of(17))
 }
 
@@ -82,113 +64,30 @@ bukkit {
     name = "PepperMinecart"
     main = "org.eu.pcraft.pepperminecart.PepperMinecart"
     apiVersion = "1.16"
-    authors = ["YourName"]
-    version = project.version
+//    depend = ['Vault']
 }
 
-// 创建Mojang映射版本的JAR
-task shadowJarMojang(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) {
-    group = "build"
-    description = "创建使用Mojang映射的JAR文件"
-    archiveClassifier.set("mojang")
-    from sourceSets.main.output
-    configurations = [project.configurations.include, project.configurations.includeMojang]
-
-    def dev = Boolean.parseBoolean(project.getProperties().getOrDefault("dev", "false").toString())
-    println "构建Mojang映射版本 - isDev: ${dev}"
-
-    if (!dev) {
-        println "Mojang版本重定位启用"
-        // 新版CommandAPI可能包结构不同，根据实际情况调整
-        relocate("dev.jorel.commandapi", "org.eu.pcraft.pepperminecart.commandapi")
-        relocate("org.bstats", "org.eu.pcraft.pepperminecart.bstats")
-        relocate("de.tr7zw.changeme.nbtapi", "org.eu.pcraft.pepperminecart.nbtapi")
-    }
-
-    manifest {
-        attributes(
-                'Main-Class': 'org.eu.pcraft.pepperminecart.PepperMinecart',
-                'Implementation-Version': project.version,
-                'Mapping-Type': 'Mojang'
-        )
-    }
-
-    // 避免重复文件
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-}
-
-// 创建Spigot映射版本的JAR
-task shadowJarSpigot(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) {
-    group = "build"
-    description = "创建使用Spigot映射的JAR文件"
-    archiveClassifier.set("spigot")
-    from sourceSets.main.output
-    configurations = [project.configurations.include, project.configurations.includeSpigot]
-
-    def dev = Boolean.parseBoolean(project.getProperties().getOrDefault("dev", "false").toString())
-    println "构建Spigot映射版本 - isDev: ${dev}"
-
-    if (!dev) {
-        println "Spigot版本重定位启用"
-        relocate("dev.jorel.commandapi", "org.eu.pcraft.pepperminecart.commandapi")
-        relocate("org.bstats", "org.eu.pcraft.pepperminecart.bstats")
-        relocate("de.tr7zw.changeme.nbtapi", "org.eu.pcraft.pepperminecart.nbtapi")
-    }
-
-    manifest {
-        attributes(
-                'Main-Class': 'org.eu.pcraft.pepperminecart.PepperMinecart',
-                'Implementation-Version': project.version,
-                'Mapping-Type': 'Spigot'
-        )
-    }
-
-    // 避免重复文件
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-}
-
-// 修改原有的shadowJar任务，让它构建默认版本（比如Spigot）
 shadowJar {
-    archiveClassifier.set("default")
-    configurations = [project.configurations.include, project.configurations.includeSpigot]
-
-    def dev = Boolean.parseBoolean(project.getProperties().getOrDefault("dev", "false").toString())
-    println "构建默认版本 - isDev: ${dev}"
-
+    configurations = [project.configurations.include]
+    def dev = Boolean.parseBoolean(project.getProperties().get("dev").toString())
+    println "isDev: ${dev}"
     if (!dev) {
-        println "默认版本重定位启用"
-        relocate("dev.jorel.commandapi", "org.eu.pcraft.pepperminecart.commandapi")
-        relocate("org.bstats", "org.eu.pcraft.pepperminecart.bstats")
+        println "Relocation enabled"
+        relocate("org.bstats", "org.eu.pcraft.pepperminecart")
         relocate("de.tr7zw.changeme.nbtapi", "org.eu.pcraft.pepperminecart.nbtapi")
+        //relocate("org.spongepowered","org.eu.pcraft.pepperminecart.org.spongepowered")
     }
-
     manifest {
-        attributes(
-                'Main-Class': 'org.eu.pcraft.pepperminecart.PepperMinecart',
-                'Implementation-Version': project.version
-        )
+//        attributes["paperweight-mappings-namespace"] = "spigot"
+        attributes 'Main-Class': 'org.eu.pcraft.Main'
     }
-
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
-// 创建一个任务同时构建所有版本
-task buildAllJars {
-    group = "build"
-    description = "构建所有版本的JAR文件"
-    dependsOn shadowJarMojang, shadowJarSpigot, shadowJar
-}
-
-// 修改build任务，让它构建所有版本
-build {
-    dependsOn buildAllJars
-}
 
 runServer {
     minecraftVersion("1.20.4")
 }
-
-tasks.withType(xyz.jpenilla.runtask.task.AbstractRun) {
+tasks.withType(AbstractRun) {
     javaLauncher = javaToolchains.launcherFor {
         vendor = JvmVendorSpec.JETBRAINS
         languageVersion = JavaLanguageVersion.of(17)

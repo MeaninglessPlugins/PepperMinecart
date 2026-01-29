@@ -1,10 +1,8 @@
 package org.eu.pcraft.pepperminecart;
 
 import java.nio.file.Path;
-import dev.jorel.commandapi.*;
-import dev.jorel.commandapi.arguments.ArgumentSuggestions;
-import dev.jorel.commandapi.arguments.GreedyStringArgument;
 import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -23,9 +21,10 @@ public final class PepperMinecart extends JavaPlugin {
     private static PepperMinecart instance;
 
     @Getter
+    @Setter
     private ConfigManager<MainConfigModule> configManager;
     @Getter
-    public MainConfigModule mainConfig = new MainConfigModule();
+    private MainConfigModule mainConfig = new MainConfigModule();
 
     @Override
     public void onLoad() {
@@ -34,7 +33,6 @@ public final class PepperMinecart extends JavaPlugin {
         configManager = new ConfigManager<>(dataPath.resolve("config.yml"), mainConfig);
         configManager.loadConfig();
         this.mainConfig = configManager.getConfigModule();
-        CommandAPI.onLoad(new CommandAPISpigotConfig(this).silentLogs(true));
     }
 
     @Override
@@ -47,32 +45,13 @@ public final class PepperMinecart extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new PepperListener(instance), this);
         instance = this;
 
-        ////Commands////
-        CommandAPI.onEnable();
-        new CommandAPICommand("PepperMinecart")
-                .withArguments(
-                        new GreedyStringArgument("subCommand")
-                                .includeSuggestions(
-                                        ArgumentSuggestions.strings("reload")
-                                )
-                )
-                .withPermission(CommandPermission.OP)
-                .withAliases("pm", "minecart")
-                .executes((sender, args) -> {
-                    if(Objects.equals(args.get("subCommand"), "reload")){
-                        sender.sendMessage("[PepperMinecart] Reloading...");
-                        Path dataPath = getDataFolder().toPath();
-                        configManager = new ConfigManager<>(dataPath.resolve("config.yml"), mainConfig);
-                        configManager.loadConfig();
-                        sender.sendMessage("[PepperMinecart] Done!");
-                    }
-                })
-                .register();
+        ////Command////
+        new PepperCommand(this);
     }
 
     @Override
     public void onDisable() {
-        CommandAPI.onDisable();
+        super.onDisable();
     }
 
 }

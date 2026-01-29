@@ -3,13 +3,17 @@ package org.eu.pcraft.pepperminecart.manager;
 import de.tr7zw.changeme.nbtapi.NBT;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
+import org.bukkit.block.Container;
 import org.bukkit.block.ShulkerBox;
 import org.bukkit.entity.*;
 import org.bukkit.entity.minecart.StorageMinecart;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BlockStateMeta;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.eu.pcraft.pepperminecart.PepperMinecart;
 import org.eu.pcraft.pepperminecart.holder.MinecartChestHolder;
 
@@ -153,5 +157,36 @@ public class MinecartManager {
         if (item != null) {
             minecart.getWorld().dropItem(minecart.getLocation(), item);
         }
+    }
+    /**
+     * 获取原版矿车上的方块
+     */
+    public static ItemStack getBlockOnVanillaMinecart(Minecart minecart) {
+        // 1. 直接查表获取对应的方块材质
+        Material mat = MinecartRegistry.getTransformation(minecart.getType());
+
+        // 如果表里没有(比如普通矿车)，null
+        if (mat == null) return null;
+
+        ItemStack item = new ItemStack(mat);
+        ItemMeta meta = item.getItemMeta();
+
+        // 2. 复制名称
+        if (minecart.getCustomName() != null) {
+            meta.setDisplayName(minecart.getCustomName());
+        }
+
+        // 3. 复制容器内容 (利用 instanceof 模式匹配简化代码)
+        if (minecart instanceof InventoryHolder cartHolder && meta instanceof BlockStateMeta bsm) {
+            BlockState state = bsm.getBlockState();
+            if (state instanceof Container itemContainer) {
+                // 复制库存
+                itemContainer.getInventory().setContents(cartHolder.getInventory().getContents());
+                bsm.setBlockState(state);
+            }
+        }
+
+        item.setItemMeta(meta);
+        return item;
     }
 }

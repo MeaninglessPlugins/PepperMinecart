@@ -4,6 +4,8 @@ import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Vehicle;
+import org.bukkit.entity.minecart.RideableMinecart;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryCloseEvent;
@@ -13,6 +15,7 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.eu.pcraft.pepperminecart.holder.MinecartChestHolder;
 import org.eu.pcraft.pepperminecart.manager.MinecartManager;
+import org.eu.pcraft.pepperminecart.manager.MinecartRegistry;
 
 public class PepperListener implements Listener {
 
@@ -64,13 +67,14 @@ public class PepperListener implements Listener {
     private void handleStandInteract(PlayerInteractEntityEvent event, Player player, Minecart minecart, ItemStack itemOnMinecart) {
         // 如果不允许自定义交互，直接返回
         if (!plugin.getMainConfig().isEnableCustomInteract()) return;
-
+        // 非普通矿车，由 bugjump 管理
+        if (!(minecart instanceof RideableMinecart)) return;
         if (itemOnMinecart != null) {
             // 尝试打开工作台或潜影盒
             boolean handled = manager.handleWorkstationInteract(player, itemOnMinecart)
                     || manager.handleShulkerBoxInteract(player, minecart, itemOnMinecart);
 
-            // 如果成功交互，或者上面有方块，都应该取消事件
+            // 禁止玩家乘坐这类矿车
             if (handled || itemOnMinecart.getType() != Material.AIR) {
                 event.setCancelled(true);
             }
@@ -78,6 +82,15 @@ public class PepperListener implements Listener {
     }
 
     private void handleSneakInteract(PlayerInteractEntityEvent event, Player player, Minecart minecart, ItemStack itemInHand, ItemStack itemOnMinecart) {
+        // TODO
+        // 情况0：对原版矿车的取下操作
+        if(!(minecart instanceof RideableMinecart)) {
+            // 手空 -> 取下方块
+
+            // 手中物品相同且未堆叠满 -> 回收方块
+
+            return;
+        }
         // 情况1：车上有方块
         if (itemOnMinecart != null) {
             // 手空 -> 取下方块
@@ -87,7 +100,7 @@ public class PepperListener implements Listener {
                 event.setCancelled(true);
             }
             // 手中物品相同且未堆叠满 -> 回收方块
-            else if (itemInHand.asOne().equals(itemOnMinecart) && itemInHand.getAmount() < itemInHand.getMaxStackSize()) {
+            else if (itemInHand.isSimilar(itemOnMinecart) && itemInHand.getAmount() < itemInHand.getMaxStackSize()) {
                 itemInHand.setAmount(itemInHand.getAmount() + 1);
                 manager.removeBlock(minecart);
                 event.setCancelled(true);

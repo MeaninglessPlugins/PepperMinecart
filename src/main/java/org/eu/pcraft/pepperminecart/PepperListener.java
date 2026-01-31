@@ -47,7 +47,7 @@ public class PepperListener implements Listener {
     @EventHandler
     public void onInteract(PlayerInteractEntityEvent event) {
         // 非主手 或 非矿车
-        if (event.getHand() != EquipmentSlot.HAND || event.getRightClicked().getType() != EntityType.MINECART) {
+        if (event.getHand() != EquipmentSlot.HAND || !(event.getRightClicked() instanceof Minecart)) {
             return;
         }
 
@@ -97,7 +97,7 @@ public class PepperListener implements Listener {
                 itemInHand.setAmount(itemInHand.getAmount() + 1);
                 actionSuccess = true;
             }
-            if(actionSuccess) {
+            if(actionSuccess) {//变掉落物
                 manager.replaceMinecart(minecart, EntityType.MINECART, null);
                 event.setCancelled(true);
             }

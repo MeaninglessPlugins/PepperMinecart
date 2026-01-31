@@ -34,7 +34,7 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.30'
     annotationProcessor 'org.projectlombok:lombok:1.18.30'
 
-    include "de.tr7zw:item-nbt-api:2.15.0"
+    include "de.tr7zw:item-nbt-api:2.15.5"
     include 'org.bstats:bstats-bukkit:3.0.2'
 
     include 'org.spongepowered:configurate-yaml:4.3.0-SNAPSHOT'
@@ -89,8 +89,8 @@ runServer {
 }
 tasks.withType(AbstractRun) {
     javaLauncher = javaToolchains.launcherFor {
-        vendor = JvmVendorSpec.JETBRAINS
-        languageVersion = JavaLanguageVersion.of(17)
+//        vendor = JvmVendorSpec.JETBRAINS
+        languageVersion = JavaLanguageVersion.of(21)
     }
-    jvmArgs("-XX:+AllowEnhancedClassRedefinition")
+//    jvmArgs("-XX:+AllowEnhancedClassRedefinition")
 }

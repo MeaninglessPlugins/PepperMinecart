@@ -161,7 +161,7 @@ public class MinecartManager {
     /**
      * 获取原版矿车上的方块
      */
-    public static ItemStack getBlockOnVanillaMinecart(Minecart minecart) {
+    public ItemStack getBlockOnVanillaMinecart(Minecart minecart) {
         // 1. 直接查表获取对应的方块材质
         Material mat = MinecartRegistry.getTransformation(minecart.getType());
 

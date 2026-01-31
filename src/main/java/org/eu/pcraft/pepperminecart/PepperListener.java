@@ -82,13 +82,24 @@ public class PepperListener implements Listener {
     }
 
     private void handleSneakInteract(PlayerInteractEntityEvent event, Player player, Minecart minecart, ItemStack itemInHand, ItemStack itemOnMinecart) {
-        // TODO
         // 情况0：对原版矿车的取下操作
-        if(!(minecart instanceof RideableMinecart)) {
-            // 手空 -> 取下方块
-
-            // 手中物品相同且未堆叠满 -> 回收方块
-
+        boolean actionSuccess = false;
+        if (!(minecart instanceof RideableMinecart)) {
+            ItemStack blockItem = manager.getBlockOnVanillaMinecart(minecart);
+            if (blockItem == null) return;
+            // 0.1 手空 -> 取下方块
+            if (itemInHand.getType().isAir()) {
+                player.getInventory().setItemInMainHand(blockItem);
+                actionSuccess = true;
+            }
+            // 0.2 手中物品相同且未堆叠满 -> 回收方块（堆叠）
+            else if (itemInHand.isSimilar(blockItem) && itemInHand.getAmount() < itemInHand.getMaxStackSize()) {
+                itemInHand.setAmount(itemInHand.getAmount() + 1);
+                actionSuccess = true;
+            }
+            if(actionSuccess) {
+                event.setCancelled(true);
+            }
             return;
         }
         // 情况1：车上有方块
@@ -97,13 +108,13 @@ public class PepperListener implements Listener {
             if (itemInHand.getType().isAir()) {
                 player.getInventory().setItemInMainHand(itemOnMinecart);
                 manager.removeBlock(minecart);
-                event.setCancelled(true);
+                actionSuccess = true;
             }
             // 手中物品相同且未堆叠满 -> 回收方块
             else if (itemInHand.isSimilar(itemOnMinecart) && itemInHand.getAmount() < itemInHand.getMaxStackSize()) {
                 itemInHand.setAmount(itemInHand.getAmount() + 1);
                 manager.removeBlock(minecart);
-                event.setCancelled(true);
+                actionSuccess = true;
             }
         }
         // 情况2：车上没方块，手上有方块 -> 放置方块
@@ -111,7 +122,11 @@ public class PepperListener implements Listener {
             ItemStack copyItem = itemInHand.asOne().clone();
             itemInHand.subtract(1);
             manager.placeBlock(minecart, copyItem);
+            actionSuccess = true;
+        }
+        if(actionSuccess) {
             event.setCancelled(true);
         }
+        return;
     }
 }

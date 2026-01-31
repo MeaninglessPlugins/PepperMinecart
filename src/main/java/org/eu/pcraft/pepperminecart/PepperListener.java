@@ -98,6 +98,7 @@ public class PepperListener implements Listener {
                 actionSuccess = true;
             }
             if(actionSuccess) {
+                manager.replaceMinecart(minecart, EntityType.MINECART, null);
                 event.setCancelled(true);
             }
             return;

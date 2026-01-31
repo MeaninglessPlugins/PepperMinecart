@@ -16,6 +16,7 @@ import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.eu.pcraft.pepperminecart.PepperMinecart;
 import org.eu.pcraft.pepperminecart.holder.MinecartChestHolder;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
 
@@ -74,11 +75,11 @@ public class MinecartManager {
     /**
      * 替换矿车实体
      */
-    private void replaceMinecart(Minecart oldCart, EntityType newType, ItemStack placedItem) {
+    public void replaceMinecart(Minecart oldCart, EntityType newType, @Nullable ItemStack placedItem) {
         Entity newEntity = oldCart.getWorld().spawnEntity(oldCart.getLocation(), newType);
         newEntity.setVelocity(oldCart.getVelocity());
         newEntity.setRotation(oldCart.getLocation().getYaw(), oldCart.getLocation().getPitch());
-        if (placedItem.getType() == Material.CHEST) {
+        if (placedItem != null && placedItem.getType() == Material.CHEST) {
             BlockStateMeta meta = (BlockStateMeta) placedItem.getItemMeta();
             Chest chest = (Chest) meta.getBlockState();
             ((StorageMinecart) newEntity).getInventory().setContents(chest.getInventory().getContents());

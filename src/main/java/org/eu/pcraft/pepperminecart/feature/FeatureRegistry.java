@@ -55,12 +55,12 @@ public class FeatureRegistry {
         // 潜影盒（各颜色）自动挂到通用容器特性
         for (Material material : Material.values()) {
             if (material.name().endsWith("_SHULKER_BOX")) {
-                byMaterial.put(material, container);
+                register(material, container);
             }
         }
         // 容器方块默认注册（配置可覆盖）
-        byMaterial.put(Material.BARREL, barrel);
-        byMaterial.put(Material.DROPPER, dropper);
+        register(Material.BARREL, barrel);
+        register(Material.DROPPER, dropper);
     }
 
     private void registerConfig(Map<String, String> config) {
@@ -73,7 +73,7 @@ public class FeatureRegistry {
                         + entry.getKey() + "=" + entry.getValue() + "'，已跳过");
                 continue;
             }
-            byMaterial.put(material, feature);
+            register(material, feature);
         }
     }
 
@@ -106,8 +106,8 @@ public class FeatureRegistry {
                 continue;
             }
             CartFeature feature = createVanillaFeature(material, type);
-            byName.put(feature.getName(), feature);
-            byMaterial.put(material, feature);
+            register(feature);
+            register(material, feature);
         }
     }
 
@@ -120,10 +120,6 @@ public class FeatureRegistry {
     }
 
     /** 注册一个新的特性实现（新矿车扩展入口） */
-    public void register(String name, CartFeature feature) {
-        byName.put(name, feature);
-    }
-
     public void register(CartFeature feature) {
         byName.put(feature.getName(), feature);
     }

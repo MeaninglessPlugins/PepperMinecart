@@ -9,16 +9,16 @@ import java.util.Map;
 @ConfigSerializable
 @Getter
 public class MainConfigModule {
-    public boolean enableCustomInteract = true;
-    public boolean soundFeedback = true;
-    public long interactionCooldownMillis = 0;
-    public boolean anvilDamageEnabled = false;
-    public double anvilDamageChance = 0.12;
+    private boolean enableCustomInteract = true;
+    private boolean soundFeedback = true;
+    private long interactionCooldownMillis = 0;
+    private boolean anvilDamageEnabled = false;
+    private double anvilDamageChance = 0.12;
 
-    public int dropperCartCooldownTicks = 4;
-    public double dropperCartXzOffset = 0.3;
+    private int dropperCartCooldownTicks = 4;
+    private double dropperCartXzOffset = 0.3;
 
-    public Map<String, Boolean> vanillaCartPickup = new LinkedHashMap<>(Map.of(
+    private Map<String, Boolean> vanillaCartPickup = new LinkedHashMap<>(Map.of(
             "CHEST", true,
             "HOPPER", true,
             "FURNACE", true,
@@ -26,7 +26,7 @@ public class MainConfigModule {
             "COMMAND_BLOCK", true
     ));
 
-    public Map<String, String> entityTransformations = new LinkedHashMap<>(Map.of(
+    private Map<String, String> entityTransformations = new LinkedHashMap<>(Map.of(
             "HOPPER", "MINECART_HOPPER",
             "CHEST", "MINECART_CHEST",
             "TNT", "MINECART_TNT",
@@ -34,7 +34,7 @@ public class MainConfigModule {
             "FURNACE", "MINECART_FURNACE"
     ));
 
-    public Map<String, String> blockInteractions = new LinkedHashMap<>(Map.ofEntries(
+    private Map<String, String> blockInteractions = new LinkedHashMap<>(Map.ofEntries(
             Map.entry("CRAFTING_TABLE", "WORKBENCH"),
             Map.entry("GRINDSTONE", "GRINDSTONE"),
             Map.entry("LOOM", "LOOM"),

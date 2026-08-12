@@ -69,6 +69,7 @@ bukkit {
         register("PepperMinecart") {
             description = "PepperMinecart command"
             usage = "/PepperMinecart reload"
+            aliases = ["pepperminecart", "pm"]
             permission = "pepperminecart.reload"
         }
     }

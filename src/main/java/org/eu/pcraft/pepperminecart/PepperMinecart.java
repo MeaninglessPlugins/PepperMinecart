@@ -79,11 +79,14 @@ public final class PepperMinecart extends JavaPlugin {
             }
         }
 
-        configManager = new ConfigManager<>(configPath, mainConfig);
+        configManager = new ConfigManager<>(configPath, mainConfig, getLogger());
         configManager.loadConfig();
         mainConfig = configManager.getConfigModule();
         minecartRegistry = new MinecartRegistry(mainConfig.getEntityTransformations());
         featureRegistry = new FeatureRegistry(mainConfig.getBlockInteractions(), mainConfig.getEntityTransformations());
+        // 注意：FeatureContext（打开中的容器/铁砧会话、投掷器冷却）在重载后保留，
+        // 只重建注册表。因此 CartFeature 实现必须保持无状态（或自行处理重载），
+        // 否则旧会话会引用已重建的特性对象。
         if (minecartService != null) {
             minecartService.setRegistry(minecartRegistry);
             minecartService.setFeatureRegistry(featureRegistry);

@@ -19,14 +19,7 @@ final class Audio {
     }
 
     private Sound getPlaceSound(Material material) {
-        String name = material.name();
-        if (name.contains("GLASS")) return Sound.BLOCK_GLASS_PLACE;
-        if (name.contains("WOOL")) return Sound.BLOCK_WOOL_PLACE;
-        if (name.contains("WOOD") || name.contains("PLANK") || name.contains("_LOG")) return Sound.BLOCK_WOOD_PLACE;
-        if (name.contains("IRON") || name.contains("GOLD") || name.contains("_COPPER") || name.contains("ANVIL")) return Sound.BLOCK_METAL_PLACE;
-        if (name.contains("SAND")) return Sound.BLOCK_SAND_PLACE;
-        if (name.contains("GRAVEL")) return Sound.BLOCK_GRAVEL_PLACE;
-        if (name.contains("SNOW")) return Sound.BLOCK_SNOW_PLACE;
-        return Sound.BLOCK_STONE_PLACE;
+        // 直接取方块的音效组，避免手写材质名匹配（新版本方块自动得到正确音效）
+        return material.createBlockData().getSoundGroup().getPlaceSound();
     }
 }

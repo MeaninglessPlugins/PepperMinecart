@@ -67,8 +67,8 @@ public class VanillaCartFeature implements CartFeature {
     protected ItemStack buildBlockItem(Minecart minecart, FeatureContext ctx) {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
-        if (minecart.getCustomName() != null) {
-            meta.setDisplayName(minecart.getCustomName());
+        if (minecart.customName() != null) {
+            meta.displayName(minecart.customName());
         }
         if (meta instanceof BlockStateMeta bsm && bsm.getBlockState() instanceof Container container) {
             fillContainer(minecart, container, ctx);

@@ -6,6 +6,7 @@ import org.bukkit.Sound;
 import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.MenuType;
 import org.eu.pcraft.pepperminecart.config.MainConfigModule;
 import org.eu.pcraft.pepperminecart.feature.CartFeature;
 import org.eu.pcraft.pepperminecart.feature.FeatureContext;
@@ -23,7 +24,7 @@ public class AnvilFeature implements CartFeature {
     @Override
     public boolean onStandInteract(Player player, Minecart minecart, ItemStack itemOnCart, FeatureContext ctx) {
         ctx.setAnvilSession(player.getUniqueId(), minecart);
-        player.openAnvil(null, true);
+        player.openInventory(MenuType.ANVIL.create(player));
         return true;
     }
 
@@ -51,7 +52,7 @@ public class AnvilFeature implements CartFeature {
             if (config.isSoundFeedback()) playAnvilBreakSound(player, minecart.getLocation());
             return true;
         } else {
-            item.setType(next);
+            item = item.withType(next);
             ctx.setBlockItem(minecart, item);
             minecart.setDisplayBlockData(next.createBlockData());
             if (config.isSoundFeedback()) playAnvilUseSound(player, minecart.getLocation());

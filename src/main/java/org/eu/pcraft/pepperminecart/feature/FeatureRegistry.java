@@ -3,7 +3,7 @@ package org.eu.pcraft.pepperminecart.feature;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
+import org.bukkit.inventory.MenuType;
 import org.eu.pcraft.pepperminecart.feature.anvil.AnvilFeature;
 import org.eu.pcraft.pepperminecart.feature.container.BarrelFeature;
 import org.eu.pcraft.pepperminecart.feature.container.ContainerFeature;
@@ -19,7 +19,6 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
 
 /**
  * 特性注册表：Material -> CartFeature 负责交互分发，名称 -> CartFeature 负责配置解析。
@@ -38,7 +37,7 @@ public class FeatureRegistry {
 
     private void registerBuiltins() {
         // 工作站（纯开界面）
-        for (Map.Entry<String, Consumer<Player>> entry : WORKSTATION_OPENERS.entrySet()) {
+        for (Map.Entry<String, MenuType> entry : WORKSTATION_MENUS.entrySet()) {
             register(new WorkstationFeature(entry.getKey(), entry.getValue()));
         }
         // 铁砧（开界面 + 耐久损耗）
@@ -127,15 +126,15 @@ public class FeatureRegistry {
     }
 
     /**
-     * 工作站配置词汇 -> 打开对应界面的动作（原 InteractionType 枚举吸收至此）
+     * 工作站配置词汇 -> 对应的菜单类型（统一经 MenuType.create 打开，避免过时的 openX 方法）
      */
-    private static final Map<String, Consumer<Player>> WORKSTATION_OPENERS = Map.of(
-            "WORKBENCH", p -> p.openWorkbench(null, true),
-            "GRINDSTONE", p -> p.openGrindstone(null, true),
-            "LOOM", p -> p.openLoom(null, true),
-            "CARTOGRAPHY_TABLE", p -> p.openCartographyTable(null, true),
-            "SMITHING_TABLE", p -> p.openSmithingTable(null, true),
-            "STONECUTTER", p -> p.openStonecutter(null, true),
-            "ENCHANTING_TABLE", p -> p.openEnchanting(null, true)
+    private static final Map<String, MenuType> WORKSTATION_MENUS = Map.of(
+            "WORKBENCH", MenuType.CRAFTING,
+            "GRINDSTONE", MenuType.GRINDSTONE,
+            "LOOM", MenuType.LOOM,
+            "CARTOGRAPHY_TABLE", MenuType.CARTOGRAPHY_TABLE,
+            "SMITHING_TABLE", MenuType.SMITHING,
+            "STONECUTTER", MenuType.STONECUTTER,
+            "ENCHANTING_TABLE", MenuType.ENCHANTMENT
     );
 }

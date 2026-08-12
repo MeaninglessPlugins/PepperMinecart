@@ -51,7 +51,7 @@ public class ConfigManager<T> {
                 configModule = node.get(configType);
             }
         } catch (ConfigurateException e) {
-            logger.warning("配置加载失败，使用默认配置: " + e.getMessage());
+            logger.warning("配置加载失败，保留上次配置: " + e.getMessage());
             node = loader.createNode();
         }
     }

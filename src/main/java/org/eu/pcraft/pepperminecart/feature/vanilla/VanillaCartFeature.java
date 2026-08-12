@@ -57,7 +57,7 @@ public class VanillaCartFeature implements CartFeature {
         if (!ctx.tryPickupIntoHand(player, blockItem)) return false;
 
         ctx.replaceMinecart(minecart, EntityType.MINECART);
-        if (config.isSoundFeedback()) ctx.playPickupSound(player, minecart.getLocation());
+        if (config.isSoundFeedback()) ctx.playPickupSound(minecart.getLocation());
         return true;
     }
 

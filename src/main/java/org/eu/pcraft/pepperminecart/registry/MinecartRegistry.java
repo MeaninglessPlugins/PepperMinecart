@@ -11,23 +11,22 @@ import java.util.Map;
 
 /**
  * 存储方块与原版特殊矿车实体的对应关系。
- * 实体类型由插件按服务器版本解析，配置只决定每项是否启用。
+ * 实体类型由配置直接指定（Material 名 -> EntityType 名）。
  */
 public class MinecartRegistry {
 
     private final BiMap<Material, EntityType> entityTransformations = HashBiMap.create();
 
-    public MinecartRegistry(Map<String, Boolean> conversions) {
+    public MinecartRegistry(Map<String, String> conversions) {
         loadTransformations(conversions);
     }
 
-    private void loadTransformations(Map<String, Boolean> conversions) {
+    private void loadTransformations(Map<String, String> conversions) {
         entityTransformations.clear();
         if (conversions == null) return;
-        for (Map.Entry<String, Boolean> entry : conversions.entrySet()) {
-            if (!Boolean.TRUE.equals(entry.getValue())) continue;
+        for (Map.Entry<String, String> entry : conversions.entrySet()) {
             Material material = EntityNameUtil.parseMaterial(entry.getKey());
-            EntityType type = EntityNameUtil.resolveMinecartType(entry.getKey());
+            EntityType type = EntityNameUtil.parseEntityType(entry.getValue());
             if (material == null || type == null) {
                 warnInvalid("vanilla-cart-conversions", entry.getKey(), entry.getValue());
                 continue;

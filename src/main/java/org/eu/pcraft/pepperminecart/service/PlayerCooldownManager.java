@@ -13,14 +13,16 @@ public class PlayerCooldownManager {
 
     private final Map<UUID, Long> lastInteractions = new HashMap<>();
 
-    /** 返回 true 表示允许本次交互 */
-    public boolean tryConsume(Player player, long cooldownMillis) {
-        if (cooldownMillis <= 0) return true;
-        long now = System.currentTimeMillis();
+    /** 是否处于冷却中（仅查询，不记录时间） */
+    public boolean isCoolingDown(Player player, long cooldownMillis) {
+        if (cooldownMillis <= 0) return false;
         Long last = lastInteractions.get(player.getUniqueId());
-        if (last != null && now - last < cooldownMillis) return false;
-        lastInteractions.put(player.getUniqueId(), now);
-        return true;
+        return last != null && System.currentTimeMillis() - last < cooldownMillis;
+    }
+
+    /** 记录一次成功的交互时间 */
+    public void markInteraction(Player player) {
+        lastInteractions.put(player.getUniqueId(), System.currentTimeMillis());
     }
 
     public void clear(Player player) {

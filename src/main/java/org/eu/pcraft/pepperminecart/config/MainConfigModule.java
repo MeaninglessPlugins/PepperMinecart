@@ -18,24 +18,24 @@ public class MainConfigModule {
     private int dropperCartCooldownTicks = 4;
     private double dropperCartXzOffset = 0.3;
 
-    private Map<String, Boolean> vanillaCartPickup = new LinkedHashMap<>(Map.of(
-            "CHEST", true,
-            "HOPPER", true,
-            "FURNACE", true,
-            "TNT", true,
-            "COMMAND_BLOCK", true
-    ));
+    private Map<String, Boolean> vanillaCartPickup = orderedMap(
+            Map.entry("CHEST", true),
+            Map.entry("HOPPER", true),
+            Map.entry("FURNACE", true),
+            Map.entry("TNT", true),
+            Map.entry("COMMAND_BLOCK", true)
+    );
 
-    /** 方块 -> 是否启用原版特殊矿车转换（实体类型由插件按服务器版本自动选择） */
-    private Map<String, Boolean> vanillaCartConversions = new LinkedHashMap<>(Map.of(
-            "CHEST", true,
-            "HOPPER", true,
-            "FURNACE", true,
-            "TNT", true,
-            "COMMAND_BLOCK", true
-    ));
+    /** 方块 -> 原版特殊矿车实体类型（Material 名 -> EntityType 名，删除条目即禁用） */
+    private Map<String, String> vanillaCartConversions = orderedMap(
+            Map.entry("CHEST", "CHEST_MINECART"),
+            Map.entry("HOPPER", "HOPPER_MINECART"),
+            Map.entry("FURNACE", "FURNACE_MINECART"),
+            Map.entry("TNT", "TNT_MINECART"),
+            Map.entry("COMMAND_BLOCK", "COMMAND_BLOCK_MINECART")
+    );
 
-    private Map<String, String> blockInteractions = new LinkedHashMap<>(Map.ofEntries(
+    private Map<String, String> blockInteractions = orderedMap(
             Map.entry("CRAFTING_TABLE", "WORKBENCH"),
             Map.entry("GRINDSTONE", "GRINDSTONE"),
             Map.entry("LOOM", "LOOM"),
@@ -48,5 +48,15 @@ public class MainConfigModule {
             Map.entry("ENCHANTING_TABLE", "ENCHANTING_TABLE"),
             Map.entry("BARREL", "BARREL"),
             Map.entry("DROPPER", "DROPPER")
-    ));
+    );
+
+    /** 有序构建 LinkedHashMap（避免 Map.of 随机迭代顺序导致首次生成 config.yml 键序不稳定） */
+    @SafeVarargs
+    private static <K, V> LinkedHashMap<K, V> orderedMap(Map.Entry<K, V>... entries) {
+        LinkedHashMap<K, V> map = new LinkedHashMap<>();
+        for (Map.Entry<K, V> entry : entries) {
+            map.put(entry.getKey(), entry.getValue());
+        }
+        return map;
+    }
 }

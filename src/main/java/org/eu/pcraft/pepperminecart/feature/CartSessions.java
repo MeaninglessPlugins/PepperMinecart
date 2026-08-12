@@ -124,17 +124,6 @@ final class CartSessions {
         dropperCooldowns.remove(minecart.getUniqueId());
     }
 
-    /**
-     * 清理已失效矿车的冷却条目（/kill、remove、区块卸载后实体被回收等不会触发 VehicleDestroyEvent 的路径），
-     * 由插件周期性任务调用，防止 UUID 条目永久残留
-     */
-    void purgeDropperCooldowns() {
-        dropperCooldowns.entrySet().removeIf(entry -> {
-            Minecart cart = entry.getValue().cart.get();
-            return cart == null || !cart.isValid();
-        });
-    }
-
     private static class DropperCooldown {
         final WeakReference<Minecart> cart;
         final long lastTicks;

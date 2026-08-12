@@ -89,7 +89,7 @@ public class MinecartService {
             return true;
         }
         // 不可交互的方块：仍取消事件，禁止乘坐
-        return itemOnCart.getType() != Material.AIR;
+        return true;
     }
 
     /**
@@ -100,12 +100,17 @@ public class MinecartService {
         if (material == null) {
             // 空矿车：仅普通矿车上允许放置方块
             if (minecart.getType() != EntityType.MINECART) return false;
-            return placeOnEmpty(player, minecart, itemInHand, config);
+            if (placeOnEmpty(player, minecart, itemInHand, config)) {
+                recordInteraction(player);
+                return true;
+            }
+            return false;
         }
 
         CartFeature feature = featureRegistry.get(material);
         // 特性的取下逻辑（原版特殊矿车）
         if (feature != null && feature.onSneakInteract(player, minecart, itemInHand, config, featureContext)) {
+            recordInteraction(player);
             return true;
         }
         // 原版特殊矿车：取下失败/被禁用时放行，保持原版交互
@@ -113,7 +118,9 @@ public class MinecartService {
             return false;
         }
         // 自定义矿车：通用取下；无论成败都取消事件（禁止乘坐）
-        genericPickup(player, minecart, config);
+        if (genericPickup(player, minecart, config)) {
+            recordInteraction(player);
+        }
         return true;
     }
 
@@ -143,34 +150,33 @@ public class MinecartService {
         ItemStack copyItem = itemInHand.asOne().clone();
         itemInHand.subtract(1);
         placeBlock(minecart, copyItem, config);
-        if (config.isSoundFeedback()) featureContext.playPlaceSound(player, minecart.getLocation(), copyItem.getType());
+        if (config.isSoundFeedback()) featureContext.playPlaceSound(minecart.getLocation(), copyItem.getType());
         return true;
     }
 
     /**
      * 自定义矿车通用取下：把车上的方块物品放进主手并清空矿车（含会话回写/清理）
      */
-    private void genericPickup(Player player, Minecart minecart, MainConfigModule config) {
-        if (!featureContext.pickupBlockIntoHand(player, minecart)) return;
-        if (config.isSoundFeedback()) featureContext.playPickupSound(player, minecart.getLocation());
+    private boolean genericPickup(Player player, Minecart minecart, MainConfigModule config) {
+        if (!featureContext.pickupBlockIntoHand(player, minecart)) return false;
+        if (config.isSoundFeedback()) featureContext.playPickupSound(minecart.getLocation());
+        return true;
     }
 
     /**
-     * 交互冷却：返回 true 表示允许本次交互
+     * 交互冷却：返回 true 表示玩家仍处于冷却中（仅查询）
      */
-    public boolean tryConsumeCooldown(Player player, long cooldownMillis) {
-        return cooldownManager.tryConsume(player, cooldownMillis);
+    public boolean isCoolingDown(Player player, long cooldownMillis) {
+        return cooldownManager.isCoolingDown(player, cooldownMillis);
     }
 
     public void clearCooldown(Player player) {
         cooldownManager.clear(player);
     }
 
-    /**
-     * 周期性清理已失效矿车的投掷器冷却条目（防内存泄漏）
-     */
-    public void purgeDropperCooldowns() {
-        featureContext.purgeDropperCooldowns();
+    /** 记录一次成功的交互（放置/取下确实生效后调用） */
+    private void recordInteraction(Player player) {
+        cooldownManager.markInteraction(player);
     }
 
     // --- 铁砧 ---

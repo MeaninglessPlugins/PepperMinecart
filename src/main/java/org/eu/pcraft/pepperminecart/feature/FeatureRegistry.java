@@ -30,7 +30,7 @@ public class FeatureRegistry {
     private final Map<String, CartFeature> byName = new HashMap<>();
     private final Map<Material, CartFeature> byMaterial = new EnumMap<>(Material.class);
 
-    public FeatureRegistry(Map<String, String> blockInteractions, Map<String, Boolean> vanillaCartConversions) {
+    public FeatureRegistry(Map<String, String> blockInteractions, Map<String, String> vanillaCartConversions) {
         registerBuiltins();
         registerConfig(blockInteractions);
         registerVanilla(vanillaCartConversions);
@@ -88,13 +88,12 @@ public class FeatureRegistry {
      * 注册原版特殊矿车特性（由 vanilla-cart-conversions 配置驱动，优先级高于 block-interactions，
      * 保证方块放置/取下始终走原版矿车形态）
      */
-    private void registerVanilla(Map<String, Boolean> conversions) {
+    private void registerVanilla(Map<String, String> conversions) {
         if (conversions == null) return;
         Set<EntityType> registeredTypes = EnumSet.noneOf(EntityType.class);
-        for (Map.Entry<String, Boolean> entry : conversions.entrySet()) {
-            if (!Boolean.TRUE.equals(entry.getValue())) continue;
+        for (Map.Entry<String, String> entry : conversions.entrySet()) {
             Material material = EntityNameUtil.parseMaterial(entry.getKey());
-            EntityType type = EntityNameUtil.resolveMinecartType(entry.getKey());
+            EntityType type = EntityNameUtil.parseEntityType(entry.getValue());
             if (material == null || type == null) {
                 Bukkit.getLogger().warning("[PepperMinecart] 配置 vanilla-cart-conversions 中存在无效项: '"
                         + entry.getKey() + "=" + entry.getValue() + "'，已跳过");

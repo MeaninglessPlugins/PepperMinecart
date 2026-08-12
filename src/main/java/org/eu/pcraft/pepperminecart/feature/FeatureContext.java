@@ -124,11 +124,6 @@ public class FeatureContext {
         sessions.removeDropperCooldown(minecart);
     }
 
-    /** 周期性清理已失效矿车的投掷器冷却条目（防内存泄漏） */
-    public void purgeDropperCooldowns() {
-        sessions.purgeDropperCooldowns();
-    }
-
     // --- 矿车形态助手 ---
 
     public Entity replaceMinecart(Minecart oldCart, EntityType newType) {
@@ -187,11 +182,11 @@ public class FeatureContext {
         return true;
     }
 
-    public void playPickupSound(Player player, Location location) {
-        audio.playPickupSound(player, location);
+    public void playPickupSound(Location location) {
+        audio.playPickupSound(location);
     }
 
-    public void playPlaceSound(Player player, Location location, Material material) {
-        audio.playPlaceSound(player, location, material);
+    public void playPlaceSound(Location location, Material material) {
+        audio.playPlaceSound(location, material);
     }
 }

@@ -38,8 +38,8 @@ public class PlayerInteractListener implements Listener {
         if (!player.hasPermission("pepperminecart.use")) return;
 
         if (player.isSneaking()) {
-            // 冷却检查
-            if (!service.tryConsumeCooldown(player, config.getInteractionCooldownMillis())) return;
+            // 冷却检查（仅查询；记录在 service 内成功交互后）
+            if (service.isCoolingDown(player, config.getInteractionCooldownMillis())) return;
             event.setCancelled(service.handleSneakInteract(player, minecart, player.getInventory().getItemInMainHand(), config));
         } else if (config.isEnableCustomInteract()) {
             event.setCancelled(service.handleStandInteract(player, minecart));

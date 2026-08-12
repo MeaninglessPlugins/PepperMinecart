@@ -23,13 +23,9 @@ import java.nio.file.Path;
 
 public final class PepperMinecart extends JavaPlugin {
 
-    /** 投掷器冷却条目清扫周期（tick）：覆盖 /kill、remove 等不触发 VehicleDestroyEvent 的移除路径 */
-    private static final long DROPPER_COOLDOWN_PURGE_INTERVAL_TICKS = 20L * 60L * 5L;
-
     private MinecartService minecartService;
     private MinecartRegistry minecartRegistry;
     private FeatureRegistry featureRegistry;
-    private org.bukkit.scheduler.BukkitTask cleanupTask;
 
     @Getter
     @Setter
@@ -55,21 +51,12 @@ public final class PepperMinecart extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new PlayerInteractListener(this, minecartService), this);
         Bukkit.getPluginManager().registerEvents(new WorldListener(minecartService), this);
 
-        // 周期清理投掷器冷却条目，防止 /kill、remove 等移除路径造成内存泄漏
-        cleanupTask = Bukkit.getScheduler().runTaskTimer(this,
-                () -> minecartService.purgeDropperCooldowns(),
-                DROPPER_COOLDOWN_PURGE_INTERVAL_TICKS, DROPPER_COOLDOWN_PURGE_INTERVAL_TICKS);
-
         // 命令注册
         new PepperCommand(this);
     }
 
     @Override
     public void onDisable() {
-        if (cleanupTask != null) {
-            cleanupTask.cancel();
-            cleanupTask = null;
-        }
         if (minecartService != null) {
             minecartService.saveAllSessions();
         }

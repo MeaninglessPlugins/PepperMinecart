@@ -40,14 +40,6 @@ public class FeatureContext {
         persistence.removeBlockItem(minecart);
     }
 
-    public ItemStack getFurnaceMinecartFuel(Minecart minecart) {
-        return persistence.getFurnaceMinecartFuel(minecart);
-    }
-
-    public void setFurnaceMinecartFuel(Minecart minecart, ItemStack fuel) {
-        persistence.setFurnaceMinecartFuel(minecart, fuel);
-    }
-
     // --- 容器会话 ---
 
     public Inventory openContainer(Minecart minecart, ItemStack blockItem) {
@@ -112,8 +104,14 @@ public class FeatureContext {
         sessions.clearAnvilSession(playerId);
     }
 
+    /**
+     * 清理该矿车的全部铁砧会话，并关闭仍开着铁砧界面的玩家。
+     * 所有 GUI（容器/铁砧）在矿车被取下或销毁时统一关闭，避免残留"幽灵界面"。
+     */
     public void clearAnvilSessions(Minecart minecart) {
-        sessions.clearAnvilSessions(minecart);
+        for (Player player : sessions.clearAnvilSessions(minecart)) {
+            player.closeInventory();
+        }
     }
 
     // --- 投掷器冷却 ---
@@ -124,6 +122,11 @@ public class FeatureContext {
 
     public void removeDropperCooldown(Minecart minecart) {
         sessions.removeDropperCooldown(minecart);
+    }
+
+    /** 周期性清理已失效矿车的投掷器冷却条目（防内存泄漏） */
+    public void purgeDropperCooldowns() {
+        sessions.purgeDropperCooldowns();
     }
 
     // --- 矿车形态助手 ---
@@ -162,7 +165,7 @@ public class FeatureContext {
 
     /**
      * 通用取下：先把打开的容器会话回写进 NBT（避免玩家编辑丢失），再取出方块物品，
-     * 成功后清理会话并踢出仍打开该容器的其他玩家。service 兜底与 feature 共用同一逻辑。
+     * 成功后清理会话并踢出仍打开该矿车容器/铁砧界面的玩家。service 兜底与 feature 共用同一逻辑。
      */
     public boolean pickupBlockIntoHand(Player player, Minecart minecart) {
         if (isContainerOpen(minecart)) {
@@ -176,6 +179,8 @@ public class FeatureContext {
         if (open != null) {
             new ArrayList<>(open.getViewers()).forEach(HumanEntity::closeInventory);
         }
+        // 关闭仍开着该矿车铁砧界面的玩家并清理会话
+        clearAnvilSessions(minecart);
         if (isContainerOpen(minecart)) {
             removeSession(minecart);
         }

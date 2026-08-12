@@ -9,7 +9,6 @@ import org.eu.pcraft.pepperminecart.feature.container.BarrelFeature;
 import org.eu.pcraft.pepperminecart.feature.container.ContainerFeature;
 import org.eu.pcraft.pepperminecart.feature.container.DropperFeature;
 import org.eu.pcraft.pepperminecart.feature.vanilla.ChestCartFeature;
-import org.eu.pcraft.pepperminecart.feature.vanilla.FurnaceCartFeature;
 import org.eu.pcraft.pepperminecart.feature.vanilla.HopperCartFeature;
 import org.eu.pcraft.pepperminecart.feature.vanilla.VanillaCartFeature;
 import org.eu.pcraft.pepperminecart.feature.workstation.WorkstationFeature;
@@ -115,8 +114,7 @@ public class FeatureRegistry {
     private static CartFeature createVanillaFeature(Material material, EntityType type) {
         if (material == Material.CHEST) return new ChestCartFeature(material, type);
         if (material == Material.HOPPER) return new HopperCartFeature(material, type);
-        if (material == Material.FURNACE) return new FurnaceCartFeature(material, type);
-        // TNT/命令方块等无库存类型
+        // 熔炉/TNT/命令方块等无库存类型：原样取下（不携带燃料等标签）
         return new VanillaCartFeature(material, type);
     }
 

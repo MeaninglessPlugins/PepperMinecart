@@ -49,6 +49,8 @@ public interface CartFeature {
         }
     }
 
-    /** 玩家从铁砧界面取走修复结果时触发（耐久损耗） */
-    default void onDamageUse(Player player, Minecart minecart, MainConfigModule config, FeatureContext ctx) {}
+    /** 玩家从铁砧界面取走修复结果时触发（耐久损耗）。返回 true 表示铁砧已报废（调用方应关闭界面） */
+    default boolean onDamageUse(Player player, Minecart minecart, MainConfigModule config, FeatureContext ctx) {
+        return false;
+    }
 }

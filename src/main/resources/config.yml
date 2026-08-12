@@ -21,8 +21,8 @@ dropper-cart-cooldown-ticks: 4
 dropper-cart-xz-offset: 0.3
 
 # 是否允许潜行+右键取下对应原版矿车（键为取下得到的方块，未列出的一律默认允许）
-# 警告：CHEST / HOPPER / FURNACE 取下会得到原版无法获得的带 NBT 物品
-#       （例如带库存数据的箱子物品、带燃料的熔炉物品）
+# 警告：CHEST / HOPPER 取下会得到原版无法获得的带 NBT 物品（例如带库存数据的箱子物品）；
+#       FURNACE 取下与原版一致，为普通熔炉物品（不携带燃料）
 vanilla-cart-pickup:
   CHEST: true
   HOPPER: true

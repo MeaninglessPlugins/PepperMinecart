@@ -47,6 +47,18 @@ public class MinecartService {
         return featureContext.getBlockItem(minecart);
     }
 
+    /**
+     * 判定矿车上是否有方块：先用 Bukkit 内存属性（DisplayBlock）快速判定，
+     * 显示方块为空时再回退读取 NBT（兼容外部改动导致的显示/NBT 不一致）。
+     * 所有"矿车上是否有方块"的判断统一走这里，避免把 NBT 反序列化放进热路径。
+     */
+    public boolean hasBlockOnCart(Minecart minecart) {
+        if (minecart.getDisplayBlockData().getMaterial() != Material.AIR) {
+            return true;
+        }
+        return getBlockItem(minecart) != null;
+    }
+
     // --- 核心业务操作 ---
 
     /**
@@ -67,6 +79,8 @@ public class MinecartService {
      */
     public boolean handleStandInteract(Player player, Minecart minecart) {
         if (!(minecart instanceof RideableMinecart)) return false;
+        // 先 DisplayBlock 快速判定是否有方块，再按需读 NBT 取物品
+        if (!hasBlockOnCart(minecart)) return false;
         ItemStack itemOnCart = getBlockItem(minecart);
         if (itemOnCart == null) return false;
 
@@ -107,8 +121,10 @@ public class MinecartService {
      * 统一识别矿车代表的方块材质：自定义矿车取车上 BlockInfo，原版特殊矿车按实体类型反查
      */
     private Material resolveMaterial(Minecart minecart) {
-        ItemStack item = featureContext.getBlockItem(minecart);
-        if (item != null) return item.getType();
+        if (hasBlockOnCart(minecart)) {
+            ItemStack item = featureContext.getBlockItem(minecart);
+            if (item != null) return item.getType();
+        }
         return registry.getTransformation(minecart.getType());
     }
 
@@ -150,21 +166,30 @@ public class MinecartService {
         cooldownManager.clear(player);
     }
 
+    /**
+     * 周期性清理已失效矿车的投掷器冷却条目（防内存泄漏）
+     */
+    public void purgeDropperCooldowns() {
+        featureContext.purgeDropperCooldowns();
+    }
+
     // --- 铁砧 ---
 
     /**
-     * 玩家从矿车铁砧取走修复结果时调用，按配置概率造成损坏
+     * 玩家从矿车铁砧取走修复结果时调用，按配置概率造成损坏。
+     * 返回 true 表示铁砧已报废（调用方应延迟关闭玩家界面，避免在点击事件处理中直接关闭）
      */
-    public void handleAnvilUse(Player player, MainConfigModule config) {
-        if (!config.isAnvilDamageEnabled()) return;
+    public boolean handleAnvilUse(Player player, MainConfigModule config) {
+        if (!config.isAnvilDamageEnabled()) return false;
         Minecart minecart = featureContext.getAnvilSession(player.getUniqueId());
-        if (minecart == null || !minecart.isValid()) return;
+        if (minecart == null || !minecart.isValid()) return false;
         ItemStack item = getBlockItem(minecart);
-        if (item == null) return;
+        if (item == null) return false;
         CartFeature feature = featureRegistry.get(item.getType());
         if (feature != null) {
-            feature.onDamageUse(player, minecart, config, featureContext);
+            return feature.onDamageUse(player, minecart, config, featureContext);
         }
+        return false;
     }
 
     /**
@@ -172,6 +197,13 @@ public class MinecartService {
      */
     public void clearAnvilSession(UUID playerId) {
         featureContext.clearAnvilSession(playerId);
+    }
+
+    /**
+     * 是否存在指定玩家的矿车铁砧会话（PrepareAnvilEvent 用于区分矿车铁砧与普通方块铁砧）
+     */
+    public boolean hasAnvilSession(UUID playerId) {
+        return featureContext.getAnvilSession(playerId) != null;
     }
 
     // --- 会话生命周期 ---
@@ -196,6 +228,8 @@ public class MinecartService {
      * 矿车移动激活分发（如投掷器压过充能激活铁轨）
      */
     public void handleDropperCartActivation(Minecart minecart, MainConfigModule config) {
+        // 热路径：DisplayBlock 判定优先，多数矿车无方块直接返回，避免逐格移动反序列化 NBT
+        if (!hasBlockOnCart(minecart)) return;
         ItemStack item = getBlockItem(minecart);
         if (item == null) return;
         CartFeature feature = featureRegistry.get(item.getType());

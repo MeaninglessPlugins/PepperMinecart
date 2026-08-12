@@ -26,14 +26,6 @@ final class CartPersistence {
         repository.removeBlockItem(minecart);
     }
 
-    ItemStack getFurnaceMinecartFuel(Minecart minecart) {
-        return repository.getFurnaceMinecartFuel(minecart);
-    }
-
-    void setFurnaceMinecartFuel(Minecart minecart, ItemStack fuel) {
-        repository.setFurnaceMinecartFuel(minecart, fuel);
-    }
-
     /**
      * 用指定实体类型替换矿车实体（原版特殊矿车转换/还原共用），返回新实体
      */

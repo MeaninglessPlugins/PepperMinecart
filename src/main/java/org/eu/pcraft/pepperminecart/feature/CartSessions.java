@@ -1,13 +1,18 @@
 package org.eu.pcraft.pepperminecart.feature;
 
+import org.bukkit.Bukkit;
 import org.bukkit.block.Container;
 import org.bukkit.entity.Minecart;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BlockStateMeta;
 
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -20,7 +25,7 @@ final class CartSessions {
     private final Map<Minecart, LiveContainer> liveContainers = new HashMap<>();
     private final Map<Inventory, Minecart> inventoryOwners = new HashMap<>();
     private final Map<UUID, Minecart> anvilSessions = new HashMap<>();
-    private final Map<UUID, Long> dropperCooldowns = new HashMap<>();
+    private final Map<UUID, DropperCooldown> dropperCooldowns = new HashMap<>();
 
     // --- 容器会话 ---
     // getBlockState() 每次调用都会返回新快照，因此打开界面时必须持有同一个 Container 引用
@@ -85,8 +90,20 @@ final class CartSessions {
         anvilSessions.remove(playerId);
     }
 
-    void clearAnvilSessions(Minecart minecart) {
-        anvilSessions.entrySet().removeIf(entry -> entry.getValue().equals(minecart));
+    /**
+     * 清理该矿车的全部铁砧会话，返回受影响玩家（调用方应关闭其仍开着的铁砧界面）
+     */
+    List<Player> clearAnvilSessions(Minecart minecart) {
+        List<Player> affected = new ArrayList<>();
+        anvilSessions.entrySet().removeIf(entry -> {
+            if (entry.getValue().equals(minecart)) {
+                Player player = Bukkit.getPlayer(entry.getKey());
+                if (player != null) affected.add(player);
+                return true;
+            }
+            return false;
+        });
+        return affected;
     }
 
     // --- 投掷器冷却 ---
@@ -95,14 +112,37 @@ final class CartSessions {
         if (cooldownTicks <= 0) return true;
         // 实体年龄单调递增且跨区块重载持久，不受 /time set 影响
         long now = minecart.getTicksLived();
-        Long last = dropperCooldowns.get(minecart.getUniqueId());
-        if (last != null && now - last < cooldownTicks) return false;
-        dropperCooldowns.put(minecart.getUniqueId(), now);
+        DropperCooldown cooldown = dropperCooldowns.get(minecart.getUniqueId());
+        if (cooldown != null && cooldown.cart.get() == minecart && now - cooldown.lastTicks < cooldownTicks) {
+            return false;
+        }
+        dropperCooldowns.put(minecart.getUniqueId(), new DropperCooldown(minecart, now));
         return true;
     }
 
     void removeDropperCooldown(Minecart minecart) {
         dropperCooldowns.remove(minecart.getUniqueId());
+    }
+
+    /**
+     * 清理已失效矿车的冷却条目（/kill、remove、区块卸载后实体被回收等不会触发 VehicleDestroyEvent 的路径），
+     * 由插件周期性任务调用，防止 UUID 条目永久残留
+     */
+    void purgeDropperCooldowns() {
+        dropperCooldowns.entrySet().removeIf(entry -> {
+            Minecart cart = entry.getValue().cart.get();
+            return cart == null || !cart.isValid();
+        });
+    }
+
+    private static class DropperCooldown {
+        final WeakReference<Minecart> cart;
+        final long lastTicks;
+
+        DropperCooldown(Minecart minecart, long lastTicks) {
+            this.cart = new WeakReference<>(minecart);
+            this.lastTicks = lastTicks;
+        }
     }
 
     private static class LiveContainer {

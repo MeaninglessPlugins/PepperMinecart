@@ -39,7 +39,7 @@ public class VehicleListener implements Listener {
 
     @EventHandler
     public void onVehicleEnter(VehicleEnterEvent event) {
-        if (event.getVehicle() instanceof Minecart minecart && service.getBlockItem(minecart) != null) {
+        if (event.getVehicle() instanceof Minecart minecart && service.hasBlockOnCart(minecart)) {
             event.setCancelled(true);
         }
     }

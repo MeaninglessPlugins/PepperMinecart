@@ -31,7 +31,8 @@ public final class EntityNameUtil {
 
     public static Material parseMaterial(String name) {
         if (name == null) return null;
-        return Material.matchMaterial(name.trim().toUpperCase(Locale.ROOT).replace(' ', '_'));
+        // 与 normalize 使用同一套归一化规则（大写、连字符/空格转下划线），键值解析保持一致
+        return Material.matchMaterial(normalize(name));
     }
 
     /**

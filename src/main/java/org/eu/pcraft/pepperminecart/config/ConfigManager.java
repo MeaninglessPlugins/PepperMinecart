@@ -3,10 +3,12 @@ package org.eu.pcraft.pepperminecart.config;
 import lombok.Getter;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.ConfigurateException;
+import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.yaml.NodeStyle;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.logging.Logger;
 
 public class ConfigManager<T> {
@@ -43,11 +45,28 @@ public class ConfigManager<T> {
                 node.set(configModule);
                 saveConfig();
             } else {
+                // 合并缺失键：配置文件中不存在的字段保留上次运行时的值，
+                // 而不是回落为类字段默认值（用户删掉某个键不等于重置该功能）
+                mergeMissingKeys();
                 configModule = node.get(configType);
             }
         } catch (ConfigurateException e) {
             logger.warning("配置加载失败，使用默认配置: " + e.getMessage());
             node = loader.createNode();
+        }
+    }
+
+    /**
+     * 把 configModule（上次运行值/默认值）中配置文件缺失的顶层键合并进 node，
+     * 保证热重载时被删除的配置项保留旧值而非回落为默认值
+     */
+    private void mergeMissingKeys() throws ConfigurateException {
+        ConfigurationNode previous = loader.createNode();
+        previous.set(configModule);
+        for (Map.Entry<Object, ? extends ConfigurationNode> entry : previous.childrenMap().entrySet()) {
+            if (!node.hasChild(entry.getKey())) {
+                node.node(entry.getKey()).from(entry.getValue());
+            }
         }
     }
 

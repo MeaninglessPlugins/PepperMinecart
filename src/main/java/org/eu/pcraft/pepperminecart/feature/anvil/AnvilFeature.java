@@ -28,11 +28,11 @@ public class AnvilFeature implements CartFeature {
     }
 
     @Override
-    public void onDamageUse(Player player, Minecart minecart, MainConfigModule config, FeatureContext ctx) {
-        if (Math.random() >= config.getAnvilDamageChance()) return;
+    public boolean onDamageUse(Player player, Minecart minecart, MainConfigModule config, FeatureContext ctx) {
+        if (Math.random() >= config.getAnvilDamageChance()) return false;
 
         ItemStack item = ctx.getBlockItem(minecart);
-        if (item == null) return;
+        if (item == null) return false;
 
         Material next;
         switch (item.getType()) {
@@ -46,14 +46,16 @@ public class AnvilFeature implements CartFeature {
             ctx.removeBlockItem(minecart);
             minecart.setDisplayBlockData(Material.AIR.createBlockData());
             ctx.clearAnvilSession(player.getUniqueId());
-            // 铁砧界面是普通 GUI，报废后仍可免费使用，直接关闭
-            player.closeInventory();
+            // 不在此关闭界面：报废后界面是普通 GUI，由调用方延迟一 tick 关闭，
+            // 避免在点击事件处理中直接 closeInventory
             if (config.isSoundFeedback()) playAnvilBreakSound(player, minecart.getLocation());
+            return true;
         } else {
             item.setType(next);
             ctx.setBlockItem(minecart, item);
             minecart.setDisplayBlockData(next.createBlockData());
             if (config.isSoundFeedback()) playAnvilUseSound(player, minecart.getLocation());
+            return false;
         }
     }
 

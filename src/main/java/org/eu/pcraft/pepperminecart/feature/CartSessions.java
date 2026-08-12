@@ -92,7 +92,9 @@ final class CartSessions {
     // --- 投掷器冷却 ---
 
     boolean consumeDropperCooldown(Minecart minecart, long cooldownTicks) {
-        long now = minecart.getWorld().getFullTime();
+        if (cooldownTicks <= 0) return true;
+        // 实体年龄单调递增且跨区块重载持久，不受 /time set 影响
+        long now = minecart.getTicksLived();
         Long last = dropperCooldowns.get(minecart.getUniqueId());
         if (last != null && now - last < cooldownTicks) return false;
         dropperCooldowns.put(minecart.getUniqueId(), now);

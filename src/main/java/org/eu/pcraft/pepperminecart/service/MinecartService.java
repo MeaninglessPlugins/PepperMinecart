@@ -122,6 +122,8 @@ public class MinecartService {
 
     private boolean placeOnEmpty(Player player, Minecart minecart, ItemStack itemInHand, MainConfigModule config) {
         if (!itemInHand.getType().isBlock()) return false;
+        // 有人乘坐时不允许放置：转换类方块会 replaceMinecart 弹出乘客，非转换类会让乘客坐上自定义矿车
+        if (!minecart.getPassengers().isEmpty()) return false;
         ItemStack copyItem = itemInHand.asOne().clone();
         itemInHand.subtract(1);
         placeBlock(minecart, copyItem, config);

@@ -142,7 +142,11 @@ public class FeatureContext {
 
     // --- 物品与音效助手 ---
 
-    /** 尝试把物品放进玩家主手：空手拿起，或相同物品堆叠，返回是否成功 */
+    /**
+     * 把物品放进玩家主手（空手放入 / 相同物品 +1）。
+     * 不处理任何持久化：若 source 来自矿车 NBT（getBlockItem），调用方须先
+     * 清 NBT 再转移；带 NBT 的取下统一走 {@link #pickupBlockIntoHand}。
+     */
     public boolean tryPickupIntoHand(Player player, ItemStack source) {
         ItemStack hand = player.getInventory().getItemInMainHand();
         if (hand.getType().isAir()) {

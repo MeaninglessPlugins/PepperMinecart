@@ -1,6 +1,7 @@
 package org.eu.pcraft.pepperminecart.feature.container;
 
-import org.bukkit.Material;
+import org.bukkit.block.data.BlockData;
+import org.bukkit.block.data.Openable;
 import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -30,14 +31,11 @@ public class BarrelFeature extends ContainerFeature {
     }
 
     private void setBarrelLid(Minecart minecart, boolean open) {
-        try {
-            if (open) {
-                minecart.setDisplayBlockData(Material.BARREL.createBlockData("[open=true]"));
-            } else {
-                minecart.setDisplayBlockData(Material.BARREL.createBlockData());
-            }
-        } catch (IllegalArgumentException e) {
-            // 版本不支持 open 属性时忽略
+        // 保留当前方块状态（如朝向），只切换 open 属性
+        BlockData data = minecart.getDisplayBlockData().clone();
+        if (data instanceof Openable openable) {
+            openable.setOpen(open);
+            minecart.setDisplayBlockData(data);
         }
     }
 }

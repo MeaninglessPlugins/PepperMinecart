@@ -45,6 +45,9 @@ public class AnvilFeature implements CartFeature {
             // 损坏铁砧再次损坏 -> 报废消失
             ctx.removeBlockItem(minecart);
             minecart.setDisplayBlockData(Material.AIR.createBlockData());
+            ctx.clearAnvilSession(player.getUniqueId());
+            // 铁砧界面是普通 GUI，报废后仍可免费使用，直接关闭
+            player.closeInventory();
             if (config.isSoundFeedback()) playAnvilBreakSound(player, minecart.getLocation());
         } else {
             item.setType(next);

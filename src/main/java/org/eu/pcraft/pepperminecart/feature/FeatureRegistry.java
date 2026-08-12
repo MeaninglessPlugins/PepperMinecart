@@ -13,11 +13,11 @@ import org.eu.pcraft.pepperminecart.feature.vanilla.FurnaceCartFeature;
 import org.eu.pcraft.pepperminecart.feature.vanilla.HopperCartFeature;
 import org.eu.pcraft.pepperminecart.feature.vanilla.VanillaCartFeature;
 import org.eu.pcraft.pepperminecart.feature.workstation.WorkstationFeature;
+import org.eu.pcraft.pepperminecart.util.EntityNameUtil;
 
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -66,8 +66,8 @@ public class FeatureRegistry {
     private void registerConfig(Map<String, String> config) {
         if (config == null) return;
         for (Map.Entry<String, String> entry : config.entrySet()) {
-            Material material = parseMaterial(entry.getKey());
-            CartFeature feature = entry.getValue() == null ? null : byName.get(normalize(entry.getValue()));
+            Material material = EntityNameUtil.parseMaterial(entry.getKey());
+            CartFeature feature = entry.getValue() == null ? null : byName.get(EntityNameUtil.normalize(entry.getValue()));
             if (material == null || feature == null) {
                 Bukkit.getLogger().warning("[PepperMinecart] 配置 block-interactions 中存在无效项: '"
                         + entry.getKey() + "=" + entry.getValue() + "'，已跳过");
@@ -93,8 +93,8 @@ public class FeatureRegistry {
         if (transformations == null) return;
         Set<EntityType> registeredTypes = EnumSet.noneOf(EntityType.class);
         for (Map.Entry<String, String> entry : transformations.entrySet()) {
-            Material material = parseMaterial(entry.getKey());
-            EntityType type = parseEntityType(entry.getValue());
+            Material material = EntityNameUtil.parseMaterial(entry.getKey());
+            EntityType type = EntityNameUtil.parseEntityType(entry.getValue());
             if (material == null || type == null) {
                 Bukkit.getLogger().warning("[PepperMinecart] 配置 entity-transformations 中存在无效项: '"
                         + entry.getKey() + "=" + entry.getValue() + "'，已跳过");
@@ -119,37 +119,6 @@ public class FeatureRegistry {
         return new VanillaCartFeature(material, type);
     }
 
-    /**
-     * 1.20.5+ Bukkit 枚举重命名（MINECART_X -> X_MINECART，命令方块为特例）。
-     * 旧名在新版 API 上 valueOf 会抛异常，这里显式映射到新名兜底。
-     */
-    private static final Map<String, String> MINECART_NAME_ALIASES = Map.of(
-            "MINECART_CHEST", "CHEST_MINECART",
-            "MINECART_HOPPER", "HOPPER_MINECART",
-            "MINECART_FURNACE", "FURNACE_MINECART",
-            "MINECART_TNT", "TNT_MINECART",
-            "MINECART_COMMAND", "COMMAND_BLOCK_MINECART",
-            "MINECART_MOB_SPAWNER", "SPAWNER_MINECART"
-    );
-
-    private static EntityType parseEntityType(String name) {
-        if (name == null) return null;
-        String normalized = normalize(name);
-        try {
-            return EntityType.valueOf(normalized);
-        } catch (IllegalArgumentException ignored) {
-            // 旧枚举名在新版 API 上不存在，走别名回退
-        }
-        String alias = MINECART_NAME_ALIASES.get(normalized);
-        if (alias != null) {
-            try {
-                return EntityType.valueOf(alias);
-            } catch (IllegalArgumentException ignored) {
-            }
-        }
-        return null;
-    }
-
     /** 注册一个新的特性实现（新矿车扩展入口） */
     public void register(String name, CartFeature feature) {
         byName.put(name, feature);
@@ -161,15 +130,6 @@ public class FeatureRegistry {
 
     public void register(Material material, CartFeature feature) {
         byMaterial.put(material, feature);
-    }
-
-    private static Material parseMaterial(String name) {
-        if (name == null) return null;
-        return Material.matchMaterial(name.trim().toUpperCase(Locale.ROOT).replace(' ', '_'));
-    }
-
-    private static String normalize(String name) {
-        return name.trim().toUpperCase(Locale.ROOT).replace('-', '_').replace(' ', '_');
     }
 
     /**

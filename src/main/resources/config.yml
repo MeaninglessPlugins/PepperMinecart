@@ -1,0 +1,58 @@
+# ============ PepperMinecart 配置文件 ============
+
+# 是否启用自定义矿车交互（工作站/潜影盒）
+enable-custom-interact: true
+
+# 取下/放置方块时是否播放音效
+sound-feedback: true
+
+# 交互冷却时间（毫秒），0 表示关闭
+interaction-cooldown-millis: 0
+
+# 是否启用矿车铁砧耐久损耗（使用有概率损坏/报废）
+anvil-damage-enabled: false
+
+# 铁砧每次使用损坏概率（0~1，默认 0.12）
+anvil-damage-chance: 0.12
+
+# 投掷器矿车激活冷却（刻）：矿车压过充能激活铁轨后，再次投出物品的间隔（原版投掷器约 2~4 刻）
+dropper-cart-cooldown-ticks: 4
+# 投掷器矿车投出物品时的 XZ 随机偏移量（方块/刻，0 表示完全竖直向上；竖直初速约 1）
+dropper-cart-xz-offset: 0.3
+
+# 是否允许潜行+右键取下对应原版矿车（键为取下得到的方块，未列出的一律默认允许）
+# 警告：CHEST / HOPPER / FURNACE 取下会得到原版无法获得的带 NBT 物品
+#       （例如带库存数据的箱子物品、带燃料的熔炉物品）
+vanilla-cart-pickup:
+  CHEST: true
+  HOPPER: true
+  FURNACE: true
+  TNT: true
+  COMMAND_BLOCK: true
+
+# 方块 -> 原版特殊矿车 转换表（Material 名 -> EntityType 名）
+entity-transformations:
+  HOPPER: MINECART_HOPPER
+  CHEST: MINECART_CHEST
+  TNT: MINECART_TNT
+  COMMAND_BLOCK: MINECART_COMMAND
+  FURNACE: MINECART_FURNACE
+
+# 方块 -> 特性 映射表（Material 名 -> Feature 名）
+# 工作站 Feature: WORKBENCH / GRINDSTONE / LOOM / CARTOGRAPHY_TABLE / SMITHING_TABLE / STONECUTTER / ENCHANTING_TABLE
+# 铁砧 Feature: ANVIL（开界面 + 耐久损耗）
+# 容器 Feature: BARREL / DROPPER / CONTAINER（通用容器，潜影盒各颜色自动归入 CONTAINER）
+# 新增矿车 = 新增一个 CartFeature 实现并在 FeatureRegistry 注册，然后在配置里把方块指向该特性名
+block-interactions:
+  CRAFTING_TABLE: WORKBENCH
+  GRINDSTONE: GRINDSTONE
+  LOOM: LOOM
+  CARTOGRAPHY_TABLE: CARTOGRAPHY_TABLE
+  SMITHING_TABLE: SMITHING_TABLE
+  STONECUTTER: STONECUTTER
+  ANVIL: ANVIL
+  CHIPPED_ANVIL: ANVIL
+  DAMAGED_ANVIL: ANVIL
+  ENCHANTING_TABLE: ENCHANTING_TABLE
+  BARREL: BARREL
+  DROPPER: DROPPER

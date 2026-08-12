@@ -1,0 +1,113 @@
+import xyz.jpenilla.runtask.task.AbstractRun
+
+plugins {
+    id("com.gradleup.shadow") version "8.3.3"
+    id 'java'
+    id "xyz.jpenilla.run-paper" version "2.3.0"
+    id 'net.minecrell.plugin-yml.bukkit' version '0.6.0'
+}
+
+group = 'org.eu.pcraft'
+version = '1.5'
+
+repositories {
+    mavenCentral()
+    maven {
+        url "https://repo.papermc.io/repository/maven-public/"
+    }
+    maven {
+        url "https://repo.extendedclip.com/content/repositories/placeholderapi/"
+    }
+    maven {
+        url "https://repo.codemc.io/repository/maven-public/"
+    }
+}
+
+configurations {
+    include
+    implementation.extendsFrom(include)
+}
+
+dependencies {
+    compileOnly "com.destroystokyo.paper:paper-api:1.16.5-R0.1-SNAPSHOT"
+
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+
+    include "de.tr7zw:item-nbt-api:2.15.5"
+    include 'org.bstats:bstats-bukkit:3.0.2'
+
+    include 'org.spongepowered:configurate-yaml:4.3.0-SNAPSHOT'
+    include 'org.spongepowered:configurate-core:4.3.0-SNAPSHOT'
+
+    testImplementation platform('org.junit:junit-bom:5.9.1')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+build {
+    dependsOn(shadowJar)
+}
+
+java{
+    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8"
+}
+
+bukkit {
+    name = "PepperMinecart"
+    main = "org.eu.pcraft.pepperminecart.PepperMinecart"
+    apiVersion = "1.16"
+//    depend = ['Vault']
+    commands {
+        register("PepperMinecart") {
+            description = "PepperMinecart command"
+            usage = "/PepperMinecart reload"
+            permission = "pepperminecart.reload"
+        }
+    }
+    permissions {
+        'pepperminecart.reload' {
+            description = 'Allows using the PepperMinecart reload command'
+            setDefault('OP')
+        }
+        'pepperminecart.use' {
+            description = 'Allows placing and removing blocks on PepperMinecart minecarts'
+            setDefault('TRUE')
+        }
+    }
+}
+
+shadowJar {
+    configurations = [project.configurations.include]
+    // 多版本 jar 条目无法被 relocate，排除避免残留未重定位类
+    exclude "META-INF/versions/**"
+    def dev = Boolean.parseBoolean(String.valueOf(project.findProperty("dev")))
+    println "isDev: ${dev}"
+    if (!dev) {
+        println "Relocation enabled"
+        relocate("org.bstats", "org.eu.pcraft.pepperminecart")
+        relocate("de.tr7zw.changeme.nbtapi", "org.eu.pcraft.pepperminecart.nbtapi")
+        relocate("org.spongepowered", "org.eu.pcraft.pepperminecart.org.spongepowered")
+        relocate("io.leangen", "org.eu.pcraft.pepperminecart.io.leangen")
+        relocate("net.kyori", "org.eu.pcraft.pepperminecart.net.kyori")
+    }
+}
+
+
+runServer {
+    minecraftVersion("1.21.11")
+}
+tasks.withType(AbstractRun) {
+    javaLauncher = javaToolchains.launcherFor {
+//        vendor = JvmVendorSpec.JETBRAINS
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+//    jvmArgs("-XX:+AllowEnhancedClassRedefinition")
+}

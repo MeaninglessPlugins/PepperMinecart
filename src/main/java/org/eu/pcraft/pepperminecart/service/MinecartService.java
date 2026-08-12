@@ -130,13 +130,10 @@ public class MinecartService {
     }
 
     /**
-     * 自定义矿车通用取下：把车上的方块物品放进主手并清空矿车
+     * 自定义矿车通用取下：把车上的方块物品放进主手并清空矿车（含会话回写/清理）
      */
     private void genericPickup(Player player, Minecart minecart, MainConfigModule config) {
-        ItemStack item = featureContext.getBlockItem(minecart);
-        if (item == null) return;
-        if (!featureContext.tryPickupIntoHand(player, item)) return;
-        featureContext.clearCustomBlock(minecart);
+        if (!featureContext.pickupBlockIntoHand(player, minecart)) return;
         if (config.isSoundFeedback()) featureContext.playPickupSound(player, minecart.getLocation());
     }
 
@@ -214,16 +211,8 @@ public class MinecartService {
         if (feature != null) {
             feature.onDestroy(minecart, featureContext);
         }
-        // 关闭打开中的容器界面（关界面会回写保存）
-        Inventory open = featureContext.getOpenInventory(minecart);
-        if (open != null) {
-            new ArrayList<>(open.getViewers()).forEach(HumanEntity::closeInventory);
-        }
-        // 兜底：若会话仍在，强制回写并清理
-        if (featureContext.isContainerOpen(minecart)) {
-            featureContext.flushContainer(minecart);
-            featureContext.removeSession(minecart);
-        }
+        // 关闭打开中的容器界面并回写清理（关界面会触发保存，兜底强制回写）
+        flushAndCloseSession(minecart);
         // 在回写之后重新读取物品，保证包含界面编辑，再交给特性决定如何掉落
         ItemStack freshItem = getBlockItem(minecart);
         if (feature != null) {
@@ -239,14 +228,7 @@ public class MinecartService {
     public void handleChunkUnload(Chunk chunk) {
         for (Minecart minecart : featureContext.getOpenMinecarts()) {
             if (!minecart.isValid() || minecart.getChunk().equals(chunk)) {
-                Inventory open = featureContext.getOpenInventory(minecart);
-                if (open != null) {
-                    new ArrayList<>(open.getViewers()).forEach(HumanEntity::closeInventory);
-                }
-                if (featureContext.isContainerOpen(minecart)) {
-                    featureContext.flushContainer(minecart);
-                    featureContext.removeSession(minecart);
-                }
+                flushAndCloseSession(minecart);
             }
         }
     }
@@ -256,14 +238,21 @@ public class MinecartService {
      */
     public void saveAllSessions() {
         for (Minecart minecart : featureContext.getOpenMinecarts()) {
-            Inventory open = featureContext.getOpenInventory(minecart);
-            if (open != null) {
-                new ArrayList<>(open.getViewers()).forEach(HumanEntity::closeInventory);
-            }
-            if (featureContext.isContainerOpen(minecart)) {
-                featureContext.flushContainer(minecart);
-                featureContext.removeSession(minecart);
-            }
+            flushAndCloseSession(minecart);
+        }
+    }
+
+    /**
+     * 关闭该矿车仍打开中的容器界面并强制回写清理（销毁/区块卸载/停用共用）
+     */
+    private void flushAndCloseSession(Minecart minecart) {
+        Inventory open = featureContext.getOpenInventory(minecart);
+        if (open != null) {
+            new ArrayList<>(open.getViewers()).forEach(HumanEntity::closeInventory);
+        }
+        if (featureContext.isContainerOpen(minecart)) {
+            featureContext.flushContainer(minecart);
+            featureContext.removeSession(minecart);
         }
     }
 }

@@ -5,12 +5,14 @@ import org.bukkit.Material;
 import org.bukkit.block.Container;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BlockStateMeta;
 
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.UUID;
 
@@ -152,6 +154,28 @@ public class FeatureContext {
             return true;
         }
         return false;
+    }
+
+    /**
+     * 通用取下：先把打开的容器会话回写进 NBT（避免玩家编辑丢失），再取出方块物品，
+     * 成功后清理会话并踢出仍打开该容器的其他玩家。service 兜底与 feature 共用同一逻辑。
+     */
+    public boolean pickupBlockIntoHand(Player player, Minecart minecart) {
+        if (isContainerOpen(minecart)) {
+            flushContainer(minecart);
+        }
+        ItemStack item = getBlockItem(minecart);
+        if (item == null) return false;
+        if (!tryPickupIntoHand(player, item)) return false;
+        clearCustomBlock(minecart);
+        Inventory open = getOpenInventory(minecart);
+        if (open != null) {
+            new ArrayList<>(open.getViewers()).forEach(HumanEntity::closeInventory);
+        }
+        if (isContainerOpen(minecart)) {
+            removeSession(minecart);
+        }
+        return true;
     }
 
     public void playPickupSound(Player player, Location location) {

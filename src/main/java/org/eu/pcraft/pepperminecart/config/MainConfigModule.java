@@ -26,12 +26,13 @@ public class MainConfigModule {
             "COMMAND_BLOCK", true
     ));
 
-    private Map<String, String> entityTransformations = new LinkedHashMap<>(Map.of(
-            "HOPPER", "MINECART_HOPPER",
-            "CHEST", "MINECART_CHEST",
-            "TNT", "MINECART_TNT",
-            "COMMAND_BLOCK", "MINECART_COMMAND",
-            "FURNACE", "MINECART_FURNACE"
+    /** 方块 -> 是否启用原版特殊矿车转换（实体类型由插件按服务器版本自动选择） */
+    private Map<String, Boolean> vanillaCartConversions = new LinkedHashMap<>(Map.of(
+            "CHEST", true,
+            "HOPPER", true,
+            "FURNACE", true,
+            "TNT", true,
+            "COMMAND_BLOCK", true
     ));
 
     private Map<String, String> blockInteractions = new LinkedHashMap<>(Map.ofEntries(

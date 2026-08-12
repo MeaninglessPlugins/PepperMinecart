@@ -31,10 +31,10 @@ public class FeatureRegistry {
     private final Map<String, CartFeature> byName = new HashMap<>();
     private final Map<Material, CartFeature> byMaterial = new EnumMap<>(Material.class);
 
-    public FeatureRegistry(Map<String, String> blockInteractions, Map<String, String> entityTransformations) {
+    public FeatureRegistry(Map<String, String> blockInteractions, Map<String, Boolean> vanillaCartConversions) {
         registerBuiltins();
         registerConfig(blockInteractions);
-        registerVanilla(entityTransformations);
+        registerVanilla(vanillaCartConversions);
     }
 
     private void registerBuiltins() {
@@ -86,22 +86,23 @@ public class FeatureRegistry {
     }
 
     /**
-     * 注册原版特殊矿车特性（由 entity-transformations 配置驱动，优先级高于 block-interactions，
+     * 注册原版特殊矿车特性（由 vanilla-cart-conversions 配置驱动，优先级高于 block-interactions，
      * 保证方块放置/取下始终走原版矿车形态）
      */
-    private void registerVanilla(Map<String, String> transformations) {
-        if (transformations == null) return;
+    private void registerVanilla(Map<String, Boolean> conversions) {
+        if (conversions == null) return;
         Set<EntityType> registeredTypes = EnumSet.noneOf(EntityType.class);
-        for (Map.Entry<String, String> entry : transformations.entrySet()) {
+        for (Map.Entry<String, Boolean> entry : conversions.entrySet()) {
+            if (!Boolean.TRUE.equals(entry.getValue())) continue;
             Material material = EntityNameUtil.parseMaterial(entry.getKey());
-            EntityType type = EntityNameUtil.parseEntityType(entry.getValue());
+            EntityType type = EntityNameUtil.resolveMinecartType(entry.getKey());
             if (material == null || type == null) {
-                Bukkit.getLogger().warning("[PepperMinecart] 配置 entity-transformations 中存在无效项: '"
+                Bukkit.getLogger().warning("[PepperMinecart] 配置 vanilla-cart-conversions 中存在无效项: '"
                         + entry.getKey() + "=" + entry.getValue() + "'，已跳过");
                 continue;
             }
             if (!registeredTypes.add(type)) {
-                Bukkit.getLogger().warning("[PepperMinecart] 配置 entity-transformations 中存在重复实体类型: '"
+                Bukkit.getLogger().warning("[PepperMinecart] 配置 vanilla-cart-conversions 中存在重复实体类型: '"
                         + entry.getKey() + "=" + entry.getValue() + "'，已跳过");
                 continue;
             }

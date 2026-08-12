@@ -10,30 +10,32 @@ import org.eu.pcraft.pepperminecart.util.EntityNameUtil;
 import java.util.Map;
 
 /**
- * 存储方块与原版特殊矿车实体的对应关系，由配置文件驱动
+ * 存储方块与原版特殊矿车实体的对应关系。
+ * 实体类型由插件按服务器版本解析，配置只决定每项是否启用。
  */
 public class MinecartRegistry {
 
     private final BiMap<Material, EntityType> entityTransformations = HashBiMap.create();
 
-    public MinecartRegistry(Map<String, String> transformations) {
-        loadTransformations(transformations);
+    public MinecartRegistry(Map<String, Boolean> conversions) {
+        loadTransformations(conversions);
     }
 
-    private void loadTransformations(Map<String, String> config) {
+    private void loadTransformations(Map<String, Boolean> conversions) {
         entityTransformations.clear();
-        if (config == null) return;
-        for (Map.Entry<String, String> entry : config.entrySet()) {
+        if (conversions == null) return;
+        for (Map.Entry<String, Boolean> entry : conversions.entrySet()) {
+            if (!Boolean.TRUE.equals(entry.getValue())) continue;
             Material material = EntityNameUtil.parseMaterial(entry.getKey());
-            EntityType type = EntityNameUtil.parseEntityType(entry.getValue());
+            EntityType type = EntityNameUtil.resolveMinecartType(entry.getKey());
             if (material == null || type == null) {
-                warnInvalid("entityTransformations", entry.getKey(), entry.getValue());
+                warnInvalid("vanilla-cart-conversions", entry.getKey(), entry.getValue());
                 continue;
             }
             try {
                 entityTransformations.put(material, type);
             } catch (IllegalArgumentException e) {
-                Bukkit.getLogger().warning("[PepperMinecart] 配置 entityTransformations 中存在重复实体类型: '"
+                Bukkit.getLogger().warning("[PepperMinecart] 配置 vanilla-cart-conversions 中存在重复实体类型: '"
                         + entry.getKey() + "=" + entry.getValue() + "'，已跳过");
             }
         }
@@ -47,7 +49,7 @@ public class MinecartRegistry {
         return entityTransformations.inverse().get(entityType);
     }
 
-    private static void warnInvalid(String section, String key, String value) {
+    private static void warnInvalid(String section, String key, Object value) {
         Bukkit.getLogger().warning("[PepperMinecart] 配置 " + section + " 中存在无效项: '" + key + "=" + value + "'，已跳过");
     }
 }

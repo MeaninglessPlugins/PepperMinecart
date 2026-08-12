@@ -7,22 +7,24 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * 配置名 -> Bukkit 枚举 的解析工具：Material 名与 EntityType 名共用的归一化与别名兜底。
- * FeatureRegistry 与 MinecartRegistry 共用，避免两处解析逻辑/别名表漂移。
+ * 配置名 -> Bukkit 枚举 的解析工具：Material 名归一化，以及原版矿车实体类型的
+ * 版本无关解析（新旧两代枚举名由本类按当前服务器自动选择）。
+ * FeatureRegistry 与 MinecartRegistry 共用，避免两处解析逻辑/映射表漂移。
  */
 public final class EntityNameUtil {
 
     /**
-     * 1.20.5+ Bukkit 枚举重命名（MINECART_X -> X_MINECART，命令方块为特例）。
-     * 旧名在新版 API 上 valueOf 会抛异常，这里显式映射到新名兜底。
+     * 原版特殊矿车固定映射：Material 名 -> 新旧两代枚举名。
+     * 1.20.5+ Bukkit 重命名（MINECART_X -> X_MINECART，命令方块为特例），
+     * 当前服务器存在哪一代由 {@link #resolveMinecartType} 在运行时决定。
      */
-    private static final Map<String, String> MINECART_NAME_ALIASES = Map.of(
-            "MINECART_CHEST", "CHEST_MINECART",
-            "MINECART_HOPPER", "HOPPER_MINECART",
-            "MINECART_FURNACE", "FURNACE_MINECART",
-            "MINECART_TNT", "TNT_MINECART",
-            "MINECART_COMMAND", "COMMAND_BLOCK_MINECART",
-            "MINECART_MOB_SPAWNER", "SPAWNER_MINECART"
+    private static final Map<String, String[]> VANILLA_CART_TYPES = Map.of(
+            "CHEST", new String[]{"MINECART_CHEST", "CHEST_MINECART"},
+            "HOPPER", new String[]{"MINECART_HOPPER", "HOPPER_MINECART"},
+            "FURNACE", new String[]{"MINECART_FURNACE", "FURNACE_MINECART"},
+            "TNT", new String[]{"MINECART_TNT", "TNT_MINECART"},
+            "COMMAND_BLOCK", new String[]{"MINECART_COMMAND", "COMMAND_BLOCK_MINECART"},
+            "MOB_SPAWNER", new String[]{"MINECART_MOB_SPAWNER", "SPAWNER_MINECART"}
     );
 
     private EntityNameUtil() {}
@@ -32,22 +34,24 @@ public final class EntityNameUtil {
         return Material.matchMaterial(name.trim().toUpperCase(Locale.ROOT).replace(' ', '_'));
     }
 
-    public static EntityType parseEntityType(String name) {
-        if (name == null) return null;
-        String normalized = normalize(name);
+    /**
+     * 解析方块材质对应的原版特殊矿车实体类型，取当前服务器上存在的那一代枚举名。
+     * 表外材质返回 null（配置不再直接写枚举名，只做开关）。
+     */
+    public static EntityType resolveMinecartType(String materialName) {
+        if (materialName == null) return null;
+        String[] names = VANILLA_CART_TYPES.get(normalize(materialName));
+        if (names == null) return null;
+        EntityType type = valueOfSafe(names[0]);
+        return type != null ? type : valueOfSafe(names[1]);
+    }
+
+    private static EntityType valueOfSafe(String name) {
         try {
-            return EntityType.valueOf(normalized);
+            return EntityType.valueOf(name);
         } catch (IllegalArgumentException ignored) {
-            // 旧枚举名在新版 API 上不存在，走别名回退
+            return null;
         }
-        String alias = MINECART_NAME_ALIASES.get(normalized);
-        if (alias != null) {
-            try {
-                return EntityType.valueOf(alias);
-            } catch (IllegalArgumentException ignored) {
-            }
-        }
-        return null;
     }
 
     /** 归一化配置值：大写、连字符/空格转下划线 */

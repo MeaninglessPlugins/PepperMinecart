@@ -30,13 +30,13 @@ vanilla-cart-pickup:
   TNT: true
   COMMAND_BLOCK: true
 
-# 方块 -> 原版特殊矿车 转换表（Material 名 -> EntityType 名）
-entity-transformations:
-  HOPPER: MINECART_HOPPER
-  CHEST: MINECART_CHEST
-  TNT: MINECART_TNT
-  COMMAND_BLOCK: MINECART_COMMAND
-  FURNACE: MINECART_FURNACE
+# 方块 -> 是否启用原版特殊矿车转换（实体类型由插件按服务器版本自动选择）
+vanilla-cart-conversions:
+  CHEST: true
+  HOPPER: true
+  FURNACE: true
+  TNT: true
+  COMMAND_BLOCK: true
 
 # 方块 -> 特性 映射表（Material 名 -> Feature 名）
 # 工作站 Feature: WORKBENCH / GRINDSTONE / LOOM / CARTOGRAPHY_TABLE / SMITHING_TABLE / STONECUTTER / ENCHANTING_TABLE

@@ -15,11 +15,16 @@ import org.eu.pcraft.pepperminecart.listener.VehicleListener;
 import org.eu.pcraft.pepperminecart.listener.WorldListener;
 import org.eu.pcraft.pepperminecart.registry.MinecartRegistry;
 import org.eu.pcraft.pepperminecart.service.MinecartService;
+import org.spongepowered.configurate.CommentedConfigurationNode;
+import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.yaml.NodeStyle;
+import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 
 public final class PepperMinecart extends JavaPlugin {
 
@@ -79,17 +84,59 @@ public final class PepperMinecart extends JavaPlugin {
             }
         }
 
+        // 迁移旧版 vanilla-cart-conversions（Material->EntityType 字符串）为布尔启用开关
+        if (Files.exists(configPath)) {
+            migrateVanillaCartConversions(configPath);
+        }
+
         configManager = new ConfigManager<>(configPath, mainConfig, getLogger());
         configManager.loadConfig();
         mainConfig = configManager.getConfigModule();
+
+        // 数值范围校验
+        double anvilChance = mainConfig.getAnvilDamageChance();
+        if (anvilChance < 0 || anvilChance > 1) {
+            getLogger().warning("[PepperMinecart] anvil-damage-chance 应在 [0,1] 区间，当前 " + anvilChance + "，将按边界值处理");
+        }
+
         minecartRegistry = new MinecartRegistry(mainConfig.getVanillaCartConversions());
         featureRegistry = new FeatureRegistry(mainConfig.getBlockInteractions(), mainConfig.getVanillaCartConversions());
-        // 注意：FeatureContext（打开中的容器/铁砧会话、投掷器冷却）在重载后保留，
+        // 注意：FeatureContext（打开中的容器/铁砧/工作站会话、投掷器冷却）在重载后保留，
         // 只重建注册表。因此 CartFeature 实现必须保持无状态（或自行处理重载），
         // 否则旧会话会引用已重建的特性对象。
         if (minecartService != null) {
             minecartService.setRegistry(minecartRegistry);
             minecartService.setFeatureRegistry(featureRegistry);
+        }
+    }
+
+    /**
+     * 迁移旧版 vanilla-cart-conversions 配置（Material -> EntityType 字符串值）为布尔启用开关。
+     * 旧值（任何字符串）一律视为启用；已是布尔值的新配置保持不变。
+     */
+    private void migrateVanillaCartConversions(Path configPath) {
+        YamlConfigurationLoader loader = YamlConfigurationLoader.builder()
+                .nodeStyle(NodeStyle.BLOCK)
+                .indent(2)
+                .path(configPath)
+                .build();
+        try {
+            CommentedConfigurationNode root = loader.load();
+            ConfigurationNode conversions = root.node("vanilla-cart-conversions");
+            if (conversions.childrenMap().isEmpty()) return;
+            boolean changed = false;
+            for (Map.Entry<Object, ? extends ConfigurationNode> entry : conversions.childrenMap().entrySet()) {
+                if (entry.getValue().raw() instanceof String) {
+                    entry.getValue().set(true);
+                    changed = true;
+                }
+            }
+            if (changed) {
+                loader.save(root);
+                getLogger().info("[PepperMinecart] 已迁移 vanilla-cart-conversions 为布尔启用开关（旧值一律视为启用）");
+            }
+        } catch (Exception e) {
+            getLogger().warning("[PepperMinecart] vanilla-cart-conversions 配置迁移失败: " + e.getMessage());
         }
     }
 

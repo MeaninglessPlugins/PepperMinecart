@@ -79,6 +79,8 @@ public class DropperFeature extends ContainerFeature {
             source.setItem(slotIndex, null);
         } else {
             toEject.setAmount(toEject.getAmount() - 1);
+            // 显式写回，不依赖 getItem 返回活引用的实现细节
+            source.setItem(slotIndex, toEject);
         }
 
         // 持久化：界面打开中回写实时库存，否则直接写回物品

@@ -27,6 +27,8 @@ public class WorkstationFeature implements CartFeature {
 
     @Override
     public boolean onStandInteract(Player player, Minecart minecart, ItemStack itemOnCart, FeatureContext ctx) {
+        // 登记会话：矿车被取下/销毁时据此关闭仍打开的工作站界面
+        ctx.setWorkstationSession(player.getUniqueId(), minecart);
         player.openInventory(menuType.create(player, null));
         return true;
     }

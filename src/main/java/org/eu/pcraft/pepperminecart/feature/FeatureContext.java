@@ -32,6 +32,11 @@ public class FeatureContext {
         return persistence.getBlockItem(minecart);
     }
 
+    /** 轻量判断：矿车上是否挂有 BlockInfo 键（不反序列化物品，供热路径使用） */
+    public boolean hasBlockInfo(Minecart minecart) {
+        return persistence.hasBlockInfo(minecart);
+    }
+
     public void setBlockItem(Minecart minecart, ItemStack item) {
         persistence.setBlockItem(minecart, item);
     }
@@ -73,7 +78,8 @@ public class FeatureContext {
         ItemStack item = getBlockItem(minecart);
         if (item == null) return;
         if (!(item.getItemMeta() instanceof BlockStateMeta meta)) return;
-        container.update(true);
+        // 容器是物品 BlockStateMeta 中的未放置快照，update(true) 无实际效果；
+        // 回写靠 setBlockState 把快照写回物品后再写 NBT
         meta.setBlockState(container);
         item.setItemMeta(meta);
         setBlockItem(minecart, item);
@@ -106,10 +112,27 @@ public class FeatureContext {
 
     /**
      * 清理该矿车的全部铁砧会话，并关闭仍开着铁砧界面的玩家。
-     * 所有 GUI（容器/铁砧）在矿车被取下或销毁时统一关闭，避免残留"幽灵界面"。
+     * 所有 GUI（容器/铁砧/工作站）在矿车被取下或销毁时统一关闭，避免残留"幽灵界面"。
      */
     public void clearAnvilSessions(Minecart minecart) {
         for (Player player : sessions.clearAnvilSessions(minecart)) {
+            player.closeInventory();
+        }
+    }
+
+    // --- 工作站会话 ---
+
+    public void setWorkstationSession(UUID playerId, Minecart minecart) {
+        sessions.setWorkstationSession(playerId, minecart);
+    }
+
+    public void clearWorkstationSession(UUID playerId) {
+        sessions.clearWorkstationSession(playerId);
+    }
+
+    /** 清理该矿车的全部工作站会话，并关闭仍开着对应界面的玩家 */
+    public void clearWorkstationSessions(Minecart minecart) {
+        for (Player player : sessions.clearWorkstationSessions(minecart)) {
             player.closeInventory();
         }
     }
@@ -153,6 +176,8 @@ public class FeatureContext {
         }
         if (hand.isSimilar(source) && hand.getAmount() < hand.getMaxStackSize()) {
             hand.setAmount(hand.getAmount() + 1);
+            // 显式写回主手，不依赖 getItemInMainHand 返回活引用的实现细节
+            player.getInventory().setItemInMainHand(hand);
             return true;
         }
         return false;
@@ -160,7 +185,8 @@ public class FeatureContext {
 
     /**
      * 通用取下：先把打开的容器会话回写进 NBT（避免玩家编辑丢失），再取出方块物品，
-     * 成功后清理会话并踢出仍打开该矿车容器/铁砧界面的玩家。service 兜底与 feature 共用同一逻辑。
+     * 关闭仍打开该矿车容器/铁砧/工作站界面的玩家，然后清空矿车上的方块。
+     * service 兜底与 feature 共用同一逻辑。
      */
     public boolean pickupBlockIntoHand(Player player, Minecart minecart) {
         if (isContainerOpen(minecart)) {
@@ -169,13 +195,16 @@ public class FeatureContext {
         ItemStack item = getBlockItem(minecart);
         if (item == null) return false;
         if (!tryPickupIntoHand(player, item)) return false;
-        clearCustomBlock(minecart);
+        // 先关闭界面：关闭事件中 handleContainerClosed 仍能读到物品并执行 onContainerClosed
+        // （如木桶合盖），随后再清空矿车上的方块
         Inventory open = getOpenInventory(minecart);
         if (open != null) {
             new ArrayList<>(open.getViewers()).forEach(HumanEntity::closeInventory);
         }
-        // 关闭仍开着该矿车铁砧界面的玩家并清理会话
+        clearCustomBlock(minecart);
+        // 关闭仍开着该矿车铁砧/工作站界面的玩家并清理会话
         clearAnvilSessions(minecart);
+        clearWorkstationSessions(minecart);
         if (isContainerOpen(minecart)) {
             removeSession(minecart);
         }

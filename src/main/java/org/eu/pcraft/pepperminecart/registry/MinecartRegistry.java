@@ -2,41 +2,40 @@ package org.eu.pcraft.pepperminecart.registry;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
-import org.eu.pcraft.pepperminecart.util.EntityNameUtil;
 
 import java.util.Map;
 
 /**
  * 存储方块与原版特殊矿车实体的对应关系。
- * 实体类型由配置直接指定（Material 名 -> EntityType 名）。
+ * 映射表写死（{@link #DEFAULT_CONVERSIONS}），配置仅控制各条目启用/禁用，
+ * 避免热重载改变映射后与已存在的自定义矿车形态冲突。
  */
 public class MinecartRegistry {
 
+    /** 写死的原版特殊矿车转换表（Material 名 -> 矿车实体类型） */
+    public static final Map<Material, EntityType> DEFAULT_CONVERSIONS = Map.of(
+            Material.CHEST, EntityType.CHEST_MINECART,
+            Material.HOPPER, EntityType.HOPPER_MINECART,
+            Material.FURNACE, EntityType.FURNACE_MINECART,
+            Material.TNT, EntityType.TNT_MINECART,
+            Material.COMMAND_BLOCK, EntityType.COMMAND_BLOCK_MINECART
+    );
+
     private final BiMap<Material, EntityType> entityTransformations = HashBiMap.create();
 
-    public MinecartRegistry(Map<String, String> conversions) {
+    public MinecartRegistry(Map<String, Boolean> conversions) {
         loadTransformations(conversions);
     }
 
-    private void loadTransformations(Map<String, String> conversions) {
+    private void loadTransformations(Map<String, Boolean> conversions) {
         entityTransformations.clear();
         if (conversions == null) return;
-        for (Map.Entry<String, String> entry : conversions.entrySet()) {
-            Material material = EntityNameUtil.parseMaterial(entry.getKey());
-            EntityType type = EntityNameUtil.parseEntityType(entry.getValue());
-            if (material == null || type == null) {
-                warnInvalid("vanilla-cart-conversions", entry.getKey(), entry.getValue());
-                continue;
-            }
-            try {
-                entityTransformations.put(material, type);
-            } catch (IllegalArgumentException e) {
-                Bukkit.getLogger().warning("[PepperMinecart] 配置 vanilla-cart-conversions 中存在重复实体类型: '"
-                        + entry.getKey() + "=" + entry.getValue() + "'，已跳过");
-            }
+        for (Map.Entry<Material, EntityType> entry : DEFAULT_CONVERSIONS.entrySet()) {
+            // 未列出的条目一律默认启用；显式 false 才禁用
+            if (!conversions.getOrDefault(entry.getKey().name(), true)) continue;
+            entityTransformations.put(entry.getKey(), entry.getValue());
         }
     }
 
@@ -46,9 +45,5 @@ public class MinecartRegistry {
 
     public Material getTransformation(EntityType entityType) {
         return entityTransformations.inverse().get(entityType);
-    }
-
-    private static void warnInvalid(String section, String key, Object value) {
-        Bukkit.getLogger().warning("[PepperMinecart] 配置 " + section + " 中存在无效项: '" + key + "=" + value + "'，已跳过");
     }
 }

@@ -25,6 +25,7 @@ final class CartSessions {
     private final Map<Minecart, LiveContainer> liveContainers = new HashMap<>();
     private final Map<Inventory, Minecart> inventoryOwners = new HashMap<>();
     private final Map<UUID, Minecart> anvilSessions = new HashMap<>();
+    private final Map<UUID, Minecart> workstationSessions = new HashMap<>();
     private final Map<UUID, DropperCooldown> dropperCooldowns = new HashMap<>();
 
     // --- 容器会话 ---
@@ -96,6 +97,32 @@ final class CartSessions {
     List<Player> clearAnvilSessions(Minecart minecart) {
         List<Player> affected = new ArrayList<>();
         anvilSessions.entrySet().removeIf(entry -> {
+            if (entry.getValue().equals(minecart)) {
+                Player player = Bukkit.getPlayer(entry.getKey());
+                if (player != null) affected.add(player);
+                return true;
+            }
+            return false;
+        });
+        return affected;
+    }
+
+    // --- 工作站会话 ---
+
+    void setWorkstationSession(UUID playerId, Minecart minecart) {
+        workstationSessions.put(playerId, minecart);
+    }
+
+    void clearWorkstationSession(UUID playerId) {
+        workstationSessions.remove(playerId);
+    }
+
+    /**
+     * 清理该矿车的全部工作站会话，返回受影响玩家（调用方应关闭其仍开着的界面）
+     */
+    List<Player> clearWorkstationSessions(Minecart minecart) {
+        List<Player> affected = new ArrayList<>();
+        workstationSessions.entrySet().removeIf(entry -> {
             if (entry.getValue().equals(minecart)) {
                 Player player = Bukkit.getPlayer(entry.getKey());
                 if (player != null) affected.add(player);

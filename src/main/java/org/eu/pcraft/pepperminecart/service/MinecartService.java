@@ -2,6 +2,7 @@ package org.eu.pcraft.pepperminecart.service;
 
 import lombok.Setter;
 import org.bukkit.Chunk;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.HumanEntity;
@@ -14,6 +15,7 @@ import org.eu.pcraft.pepperminecart.config.MainConfigModule;
 import org.eu.pcraft.pepperminecart.feature.CartFeature;
 import org.eu.pcraft.pepperminecart.feature.FeatureContext;
 import org.eu.pcraft.pepperminecart.feature.FeatureRegistry;
+import org.eu.pcraft.pepperminecart.feature.container.DropperFeature;
 import org.eu.pcraft.pepperminecart.registry.MinecartRegistry;
 
 import java.util.ArrayList;
@@ -27,6 +29,9 @@ public class MinecartService {
 
     private final FeatureContext featureContext = new FeatureContext();
     private final PlayerCooldownManager cooldownManager = new PlayerCooldownManager();
+
+    /** 空矿车放置结果：区分"已放置 / 配置禁用 / 未处理（放行原版）" */
+    private enum PlaceResult { PLACED, DISABLED, IGNORED }
 
     /**
      *  配置重载后替换注册表
@@ -49,14 +54,14 @@ public class MinecartService {
 
     /**
      * 判定矿车上是否有方块：先用 Bukkit 内存属性（DisplayBlock）快速判定，
-     * 显示方块为空时再回退读取 NBT（兼容外部改动导致的显示/NBT 不一致）。
-     * 所有"矿车上是否有方块"的判断统一走这里，避免把 NBT 反序列化放进热路径。
+     * 显示方块为空时再回退到轻量的 NBT 键存在性判断（不反序列化整个物品），
+     * 避免把 NBT 反序列化放进热路径。
      */
     public boolean hasBlockOnCart(Minecart minecart) {
         if (minecart.getDisplayBlockData().getMaterial() != Material.AIR) {
             return true;
         }
-        return getBlockItem(minecart) != null;
+        return featureContext.hasBlockInfo(minecart);
     }
 
     // --- 核心业务操作 ---
@@ -100,11 +105,13 @@ public class MinecartService {
         if (material == null) {
             // 空矿车：仅普通矿车上允许放置方块
             if (minecart.getType() != EntityType.MINECART) return false;
-            if (placeOnEmpty(player, minecart, itemInHand, config)) {
+            PlaceResult result = placeOnEmpty(player, minecart, itemInHand, config);
+            if (result == PlaceResult.PLACED) {
                 recordInteraction(player);
                 return true;
             }
-            return false;
+            // 配置禁用项同样取消事件（禁止放置），其余情况放行原版
+            return result == PlaceResult.DISABLED;
         }
 
         CartFeature feature = featureRegistry.get(material);
@@ -143,15 +150,21 @@ public class MinecartService {
         return material != null ? featureRegistry.get(material) : null;
     }
 
-    private boolean placeOnEmpty(Player player, Minecart minecart, ItemStack itemInHand, MainConfigModule config) {
-        if (!itemInHand.getType().isBlock()) return false;
+    private PlaceResult placeOnEmpty(Player player, Minecart minecart, ItemStack itemInHand, MainConfigModule config) {
+        Material type = itemInHand.getType();
+        if (!type.isBlock()) return PlaceResult.IGNORED;
+        // 写死转换表中被禁用的方块：禁止放到矿车上（不消耗物品、不存储为自定义方块）
+        if (featureRegistry.isDisabledVanillaMaterial(type)) {
+            player.sendMessage("§c[PepperMinecart] 该方块矿车类型已在配置中禁用");
+            return PlaceResult.DISABLED;
+        }
         // 有人乘坐时不允许放置：转换类方块会 replaceMinecart 弹出乘客，非转换类会让乘客坐上自定义矿车
-        if (!minecart.getPassengers().isEmpty()) return false;
+        if (!minecart.getPassengers().isEmpty()) return PlaceResult.IGNORED;
         ItemStack copyItem = itemInHand.asOne().clone();
         itemInHand.subtract(1);
         placeBlock(minecart, copyItem, config);
         if (config.isSoundFeedback()) featureContext.playPlaceSound(minecart.getLocation(), copyItem.getType());
-        return true;
+        return PlaceResult.PLACED;
     }
 
     /**
@@ -212,6 +225,15 @@ public class MinecartService {
         return featureContext.getAnvilSession(playerId) != null;
     }
 
+    // --- 工作站会话 ---
+
+    /**
+     * 关闭界面时清理工作站会话（矿车销毁时据此关闭仍打开的工作台/附魔台界面）
+     */
+    public void clearWorkstationSession(UUID playerId) {
+        featureContext.clearWorkstationSession(playerId);
+    }
+
     // --- 会话生命周期 ---
 
     /**
@@ -234,8 +256,11 @@ public class MinecartService {
      * 矿车移动激活分发（如投掷器压过充能激活铁轨）
      */
     public void handleDropperCartActivation(Minecart minecart, MainConfigModule config) {
-        // 热路径：DisplayBlock 判定优先，多数矿车无方块直接返回，避免逐格移动反序列化 NBT
+        // 热路径：显示方块为空且无 BlockInfo 标记 → 直接返回，避免逐格移动反序列化 NBT
         if (!hasBlockOnCart(minecart)) return;
+        Material display = minecart.getDisplayBlockData().getMaterial();
+        // 显示方块非 AIR 且非投掷器：无需读取 NBT（仅投掷器矿车有激活逻辑）
+        if (display != Material.AIR && !(featureRegistry.get(display) instanceof DropperFeature)) return;
         ItemStack item = getBlockItem(minecart);
         if (item == null) return;
         CartFeature feature = featureRegistry.get(item.getType());
@@ -249,6 +274,7 @@ public class MinecartService {
      */
     public void handleCartDestruction(Minecart minecart) {
         featureContext.clearAnvilSessions(minecart);
+        featureContext.clearWorkstationSessions(minecart);
         CartFeature feature = resolveFeature(minecart);
         if (feature != null) {
             feature.onDestroy(minecart, featureContext);
@@ -265,12 +291,23 @@ public class MinecartService {
     }
 
     /**
-     * 区块卸载时清理该区块内的会话，防止内存泄漏
+     * 区块卸载时清理该区块内的会话，防止内存泄漏。
+     * 用坐标比较替代 getChunk()，避免卸载期间对实体强制加载；仅扫描目标区块所在世界。
      */
     public void handleChunkUnload(Chunk chunk) {
+        long cx = chunk.getX();
+        long cz = chunk.getZ();
         for (Minecart minecart : featureContext.getOpenMinecarts()) {
-            if (!minecart.isValid() || minecart.getChunk().equals(chunk)) {
+            if (!minecart.isValid()) {
                 flushAndCloseSession(minecart);
+                featureContext.removeDropperCooldown(minecart);
+                continue;
+            }
+            Location loc = minecart.getLocation();
+            if (!loc.getWorld().equals(chunk.getWorld())) continue;
+            if ((loc.getBlockX() >> 4) == cx && (loc.getBlockZ() >> 4) == cz) {
+                flushAndCloseSession(minecart);
+                featureContext.removeDropperCooldown(minecart);
             }
         }
     }

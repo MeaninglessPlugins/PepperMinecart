@@ -41,9 +41,8 @@ public class ConfigManager<T> {
         try {
             node = loader.load();
             if (node.empty()) {
-                // 无配置文件时生成默认配置
-                node.set(configModule);
-                saveConfig();
+                // 空文件（不存在或仅注释）：使用类默认值，不写回磁盘以免覆盖模板注释
+                configModule = node.get(configType);
             } else {
                 // 合并缺失键：配置文件中不存在的字段保留上次运行时的值，
                 // 而不是回落为类字段默认值（用户删掉某个键不等于重置该功能）
@@ -51,21 +50,29 @@ public class ConfigManager<T> {
                 configModule = node.get(configType);
             }
         } catch (ConfigurateException e) {
-            logger.warning("配置加载失败，保留上次配置: " + e.getMessage());
+            logger.warning("配置加载失败，已保留上次配置（请检查配置格式与各键类型）: " + e.getMessage());
             node = loader.createNode();
         }
     }
 
     /**
-     * 把 configModule（上次运行值/默认值）中配置文件缺失的顶层键合并进 node，
+     * 把 configModule（上次运行值/默认值）中配置文件缺失的键递归合并进 node，
      * 保证热重载时被删除的配置项保留旧值而非回落为默认值
      */
     private void mergeMissingKeys() throws ConfigurateException {
         ConfigurationNode previous = loader.createNode();
         previous.set(configModule);
-        for (Map.Entry<Object, ? extends ConfigurationNode> entry : previous.childrenMap().entrySet()) {
-            if (!node.hasChild(entry.getKey())) {
-                node.node(entry.getKey()).from(entry.getValue());
+        mergeRecursive(previous, node);
+    }
+
+    private void mergeRecursive(ConfigurationNode from, ConfigurationNode to) throws ConfigurateException {
+        for (Map.Entry<Object, ? extends ConfigurationNode> entry : from.childrenMap().entrySet()) {
+            Object key = entry.getKey();
+            ConfigurationNode child = entry.getValue();
+            if (!to.hasChild(key)) {
+                to.node(key).from(child);
+            } else if (!child.childrenMap().isEmpty()) {
+                mergeRecursive(child, to.node(key));
             }
         }
     }

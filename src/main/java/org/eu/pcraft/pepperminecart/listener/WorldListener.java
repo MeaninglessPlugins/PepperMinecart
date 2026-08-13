@@ -1,6 +1,7 @@
 package org.eu.pcraft.pepperminecart.listener;
 
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.world.ChunkUnloadEvent;
 import org.eu.pcraft.pepperminecart.service.MinecartService;
@@ -16,8 +17,9 @@ public class WorldListener implements Listener {
         this.service = service;
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onChunkUnload(ChunkUnloadEvent event) {
+        // 仅在卸载确认不会被其他插件取消时清理会话，避免误清正在编辑的容器界面
         service.handleChunkUnload(event.getChunk());
     }
 }

@@ -30,13 +30,14 @@ vanilla-cart-pickup:
   TNT: true
   COMMAND_BLOCK: true
 
-# 方块 -> 原版特殊矿车实体类型（Material 名 -> EntityType 名，仅接受矿车实体类型；删除条目即禁用）
+# 原版特殊矿车转换启用开关（Material 名 -> true/false；映射表已写死在代码中，未列出的一律默认启用）
+# 关闭某项后，对应方块将无法放到矿车上（放置会被拒绝并提示）
 vanilla-cart-conversions:
-  CHEST: CHEST_MINECART
-  HOPPER: HOPPER_MINECART
-  FURNACE: FURNACE_MINECART
-  TNT: TNT_MINECART
-  COMMAND_BLOCK: COMMAND_BLOCK_MINECART
+  CHEST: true
+  HOPPER: true
+  FURNACE: true
+  TNT: true
+  COMMAND_BLOCK: true
 
 # 方块 -> 特性 映射表（Material 名 -> Feature 名）
 # 工作站 Feature: WORKBENCH / GRINDSTONE / LOOM / CARTOGRAPHY_TABLE / SMITHING_TABLE / STONECUTTER / ENCHANTING_TABLE

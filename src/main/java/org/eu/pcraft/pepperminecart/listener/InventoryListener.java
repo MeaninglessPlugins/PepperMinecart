@@ -41,8 +41,9 @@ public class InventoryListener implements Listener {
 
     @EventHandler
     public void onCloseInv(InventoryCloseEvent event) {
-        // 关闭界面时清理铁砧会话与待判定标记
+        // 关闭界面时清理铁砧/工作站会话与待判定标记
         service.clearAnvilSession(event.getPlayer().getUniqueId());
+        service.clearWorkstationSession(event.getPlayer().getUniqueId());
         if (event.getInventory().getType() == InventoryType.ANVIL) {
             pendingAnvilTakes.remove(event.getInventory());
         }

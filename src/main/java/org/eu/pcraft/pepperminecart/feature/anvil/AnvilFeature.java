@@ -30,7 +30,9 @@ public class AnvilFeature implements CartFeature {
 
     @Override
     public boolean onDamageUse(Player player, Minecart minecart, MainConfigModule config, FeatureContext ctx) {
-        if (Math.random() >= config.getAnvilDamageChance()) return false;
+        // 概率钳制到 [0,1]，避免配置越界造成恒损坏/永不损坏
+        double chance = Math.max(0.0, Math.min(1.0, config.getAnvilDamageChance()));
+        if (Math.random() >= chance) return false;
 
         ItemStack item = ctx.getBlockItem(minecart);
         if (item == null) return false;

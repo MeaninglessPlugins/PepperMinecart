@@ -12,6 +12,7 @@ import org.eu.pcraft.pepperminecart.feature.vanilla.ChestCartFeature;
 import org.eu.pcraft.pepperminecart.feature.vanilla.HopperCartFeature;
 import org.eu.pcraft.pepperminecart.feature.vanilla.VanillaCartFeature;
 import org.eu.pcraft.pepperminecart.feature.workstation.WorkstationFeature;
+import org.eu.pcraft.pepperminecart.registry.MinecartRegistry;
 import org.eu.pcraft.pepperminecart.util.EntityNameUtil;
 
 import java.util.EnumMap;
@@ -28,8 +29,10 @@ public class FeatureRegistry {
 
     private final Map<String, CartFeature> byName = new HashMap<>();
     private final Map<Material, CartFeature> byMaterial = new EnumMap<>(Material.class);
+    /** 当前启用中的原版特殊矿车转换方块（用于"禁用项禁止放置"判定） */
+    private final Set<Material> enabledVanillaMaterials = EnumSet.noneOf(Material.class);
 
-    public FeatureRegistry(Map<String, String> blockInteractions, Map<String, String> vanillaCartConversions) {
+    public FeatureRegistry(Map<String, String> blockInteractions, Map<String, Boolean> vanillaCartConversions) {
         registerBuiltins();
         registerConfig(blockInteractions);
         registerVanilla(vanillaCartConversions);
@@ -50,9 +53,9 @@ public class FeatureRegistry {
         DropperFeature dropper = new DropperFeature();
         register(dropper);
 
-        // 潜影盒（各颜色）自动挂到通用容器特性
+        // 潜影盒（含未染色 SHULKER_BOX，名称无下划线前缀）自动挂到通用容器特性
         for (Material material : Material.values()) {
-            if (material.name().endsWith("_SHULKER_BOX")) {
+            if (material.name().endsWith("SHULKER_BOX")) {
                 register(material, container);
             }
         }
@@ -84,26 +87,26 @@ public class FeatureRegistry {
     }
 
     /**
-     * 注册原版特殊矿车特性（由 vanilla-cart-conversions 配置驱动，优先级高于 block-interactions，
-     * 保证方块放置/取下始终走原版矿车形态）
+     * 该方块是否在写死的原版矿车转换表中、但当前配置为禁用。
+     * 禁用项禁止放在矿车上（放置时直接拒绝），避免落入自定义矿车形态后与转换逻辑冲突。
      */
-    private void registerVanilla(Map<String, String> conversions) {
+    public boolean isDisabledVanillaMaterial(Material material) {
+        return MinecartRegistry.DEFAULT_CONVERSIONS.containsKey(material)
+                && !enabledVanillaMaterials.contains(material);
+    }
+
+    /**
+     * 注册原版特殊矿车特性：映射表写死在 {@link MinecartRegistry#DEFAULT_CONVERSIONS}，
+     * 配置仅控制启用/禁用；注册优先级高于 block-interactions，保证方块放置/取下始终走原版矿车形态。
+     */
+    private void registerVanilla(Map<String, Boolean> conversions) {
         if (conversions == null) return;
-        Set<EntityType> registeredTypes = EnumSet.noneOf(EntityType.class);
-        for (Map.Entry<String, String> entry : conversions.entrySet()) {
-            Material material = EntityNameUtil.parseMaterial(entry.getKey());
-            EntityType type = EntityNameUtil.parseEntityType(entry.getValue());
-            if (material == null || type == null) {
-                Bukkit.getLogger().warning("[PepperMinecart] 配置 vanilla-cart-conversions 中存在无效项: '"
-                        + entry.getKey() + "=" + entry.getValue() + "'，已跳过");
-                continue;
-            }
-            if (!registeredTypes.add(type)) {
-                Bukkit.getLogger().warning("[PepperMinecart] 配置 vanilla-cart-conversions 中存在重复实体类型: '"
-                        + entry.getKey() + "=" + entry.getValue() + "'，已跳过");
-                continue;
-            }
-            CartFeature feature = createVanillaFeature(material, type);
+        for (Map.Entry<Material, EntityType> entry : MinecartRegistry.DEFAULT_CONVERSIONS.entrySet()) {
+            Material material = entry.getKey();
+            // 未列出的条目一律默认启用；显式 false 才禁用
+            if (!conversions.getOrDefault(material.name(), true)) continue;
+            enabledVanillaMaterials.add(material);
+            CartFeature feature = createVanillaFeature(material, entry.getValue());
             register(feature);
             register(material, feature);
         }

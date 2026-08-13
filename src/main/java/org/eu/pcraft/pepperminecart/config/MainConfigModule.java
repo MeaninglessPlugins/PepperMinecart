@@ -26,13 +26,13 @@ public class MainConfigModule {
             Map.entry("COMMAND_BLOCK", true)
     );
 
-    /** 方块 -> 原版特殊矿车实体类型（Material 名 -> EntityType 名，删除条目即禁用） */
-    private Map<String, String> vanillaCartConversions = orderedMap(
-            Map.entry("CHEST", "CHEST_MINECART"),
-            Map.entry("HOPPER", "HOPPER_MINECART"),
-            Map.entry("FURNACE", "FURNACE_MINECART"),
-            Map.entry("TNT", "TNT_MINECART"),
-            Map.entry("COMMAND_BLOCK", "COMMAND_BLOCK_MINECART")
+    /** 原版特殊矿车转换启用开关（Material 名 -> 是否启用；映射表写死在 MinecartRegistry，未列出的一律默认启用） */
+    private Map<String, Boolean> vanillaCartConversions = orderedMap(
+            Map.entry("CHEST", true),
+            Map.entry("HOPPER", true),
+            Map.entry("FURNACE", true),
+            Map.entry("TNT", true),
+            Map.entry("COMMAND_BLOCK", true)
     );
 
     private Map<String, String> blockInteractions = orderedMap(

@@ -3,6 +3,7 @@ package org.eu.pcraft.pepperminecart.feature;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.World;
 
 /**
  * 音效播放
@@ -10,11 +11,17 @@ import org.bukkit.Sound;
 final class Audio {
 
     void playPickupSound(Location location) {
-        location.getWorld().playSound(location, Sound.ENTITY_ITEM_PICKUP, 0.6f, 1.5f);
+        World world = location.getWorld();
+        if (world != null) {
+            world.playSound(location, Sound.ENTITY_ITEM_PICKUP, 0.6f, 1.5f);
+        }
     }
 
     void playPlaceSound(Location location, Material material) {
-        location.getWorld().playSound(location, getPlaceSound(material), 0.8f, 1.0f);
+        World world = location.getWorld();
+        if (world != null) {
+            world.playSound(location, getPlaceSound(material), 0.8f, 1.0f);
+        }
     }
 
     private Sound getPlaceSound(Material material) {

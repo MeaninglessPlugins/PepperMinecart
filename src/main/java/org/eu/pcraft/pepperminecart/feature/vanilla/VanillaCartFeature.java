@@ -1,5 +1,6 @@
 package org.eu.pcraft.pepperminecart.feature.vanilla;
 
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Container;
 import org.bukkit.entity.Entity;
@@ -48,6 +49,8 @@ public class VanillaCartFeature implements CartFeature {
 
     @Override
     public boolean onSneakInteract(Player player, Minecart minecart, ItemStack itemInHand, MainConfigModule config, FeatureContext ctx) {
+        // 实体形态不匹配（如启用转换前就存在的"自定义箱子矿车"）：走通用取下，避免 buildBlockItem 得到空物品
+        if (minecart.getType() != entityType) return false;
         // 配置开关：是否允许取下该类型的原版矿车（未列出的一律默认允许）
         Map<String, Boolean> pickupConfig = config.getVanillaCartPickup();
         if (pickupConfig == null || !pickupConfig.getOrDefault(material.name(), true)) return false;
@@ -56,8 +59,10 @@ public class VanillaCartFeature implements CartFeature {
         if (blockItem == null) return false;
         if (!ctx.tryPickupIntoHand(player, blockItem)) return false;
 
+        // 先取位置再替换，避免对已移除实体取位置
+        Location loc = minecart.getLocation();
         ctx.replaceMinecart(minecart, EntityType.MINECART);
-        if (config.isSoundFeedback()) ctx.playPickupSound(minecart.getLocation());
+        if (config.isSoundFeedback()) ctx.playPickupSound(loc);
         return true;
     }
 

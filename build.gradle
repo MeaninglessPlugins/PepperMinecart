@@ -34,7 +34,7 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.30'
     annotationProcessor 'org.projectlombok:lombok:1.18.30'
 
-    include "de.tr7zw:item-nbt-api:2.15.5"
+    include "de.tr7zw:item-nbt-api:2.16.0"
     include 'org.bstats:bstats-bukkit:3.0.2'
 
     // 固定稳定版，避免 SNAPSHOT 构建不可复现；configurate-core 由 yaml 传递提供

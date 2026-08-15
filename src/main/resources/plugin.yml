@@ -1,0 +1,21 @@
+name: PepperMinecart
+version: '${version}'
+main: com.pepperminecart.PepperMinecartPlugin
+api-version: '1.21'
+folia-supported: false
+description: 移动工作站与移动仓库 —— 把方块放到矿车上
+authors: [PepperMinecart]
+
+commands:
+  pepperminecart:
+    description: PepperMinecart 主命令
+    usage: /<command> reload
+    aliases: [pm]
+
+permissions:
+  pepperminecart.use:
+    description: 允许放置/取下矿车方块并打开矿车界面
+    default: true
+  pepperminecart.reload:
+    description: 允许执行 /pm reload 热重载配置
+    default: op

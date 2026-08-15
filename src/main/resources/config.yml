@@ -1,0 +1,71 @@
+# ============================================================
+# PepperMinecart 配置文件
+# 修改后执行 /pm reload（别名 /pepperminecart reload）热重载，无需重启服务器
+# ============================================================
+
+# ---- 方块放置与取下 ----
+# 取下策略（对所有方块统一生效，无任何例外）：
+#   INVENTORY - 取下后进玩家背包（放不下掉落地面）
+#   DROP      - 取下后掉落到地面
+#   DISABLED  - 禁止取下
+take-off-mode: INVENTORY
+
+# true  = 除 disabled-blocks 外所有方块都允许放置
+# false = 仅允许 enabled-blocks 中列出的方块
+allow-all-blocks: true
+
+# 禁止放置的方块（allow-all-blocks: true 时生效），填写方块材质名
+disabled-blocks:
+  - BEDROCK
+  - BARRIER
+
+# 仅允许放置的方块（allow-all-blocks: false 时生效）
+enabled-blocks: []
+
+# 与领地类插件协作：放置/取下时模拟 BlockPlaceEvent/BlockBreakEvent，
+# 被其他插件取消则禁止操作。关闭后为纯实体交互，不受领地限制。
+respect-protection: true
+
+# 方块在矿车上的显示高度（单位 1/16 格），根据视觉效果调整
+display-block-offset: 6
+
+# ---- 交互 ----
+# 玩家与矿车交互的最小间隔（毫秒），防止快速连点
+interaction-cooldown-ms: 250
+
+# 音效开关
+sounds:
+  place: true        # 放置方块音效
+  take-off: true     # 取下方块音效
+
+# ---- 容器类矿车取下策略 ----
+# 木桶/投掷器/通用容器等容器类方块（不含潜影盒）的取下规则，优先级高于 take-off-mode：
+#   PICKUP    - 直接取下，内容物随容器物品（NBT）带走
+#   DROP      - 内容物全部掉落到地面，容器物品本身按 take-off-mode 处理（进背包/落地）
+#   FORBIDDEN - 禁止取下容器类方块
+# 潜影盒不参与本策略，与普通方块一样按 take-off-mode 处理。
+container-pickup-policy: PICKUP
+
+# ---- 原版特殊矿车 ----
+vanilla-carts:
+  # 是否允许潜行取下原版特殊矿车上的物品（箱子矿车→带库存的箱子、漏斗矿车→带库存的漏斗等，
+  # 矿车还原为普通矿车；世界上已存在的原版矿车同样适用）。
+  # false - 原版特殊矿车一律不能取下（内容仍可通过原版界面访问）
+  allow-pickup: true
+
+# ---- 铁砧耐久（可选）----
+anvil-damage:
+  enabled: true
+  # 每次取走修复结果时铁砧损坏的概率（0.0 - 1.0）
+  chance-per-use: 0.12
+  # 报废时是否掉落损坏的铁砧物品；false = 直接消失
+  drop-on-break: false
+
+# ---- 发射器矿车 ----
+dispenser-cart:
+  # 两次弹出物品的最小间隔（tick，20 tick = 1 秒）
+  cooldown-ticks: 40
+  # 弹出位置的随机偏移（格）
+  eject-offset: 0.6
+  # 弹出初速度
+  eject-speed: 0.5

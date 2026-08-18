@@ -23,10 +23,13 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
+// 配置期捕获版本：processResources 执行期访问 project/Task.project 已被 Gradle 弃用
+val pluginVersion: String = version.toString()
+
 tasks {
     processResources {
         filesMatching("plugin.yml") {
-            expand("version" to project.version)
+            expand("version" to pluginVersion)
         }
     }
 
@@ -35,9 +38,12 @@ tasks {
         options.release.set(21)
     }
 
+    // 交付产物：shadowJar 使用 -all 分类器，避免与普通 jar 同名互相覆盖。
+    // 若同名，单独运行 `gradlew jar` 会把缺 bstats 的瘦包覆盖成部署产物，
+    // 服务器加载时 NoClassDefFoundError 直接启用失败。
     shadowJar {
-        archiveClassifier.set("")
-        archiveFileName.set("PepperMinecart-${project.version}.jar")
+        archiveClassifier.set("all")
+        archiveFileName.set("PepperMinecart-${pluginVersion}-all.jar")
         relocate("org.bstats", "com.pepperminecart.libs.bstats")
     }
 
@@ -47,5 +53,7 @@ tasks {
 
     test {
         useJUnitPlatform()
+        // BuildArtifactContractTest 断言交付 jar 已生成且包含重定位 bstats
+        dependsOn(shadowJar, jar)
     }
 }

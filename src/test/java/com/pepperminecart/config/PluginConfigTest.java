@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.pepperminecart.api.TakeOffResult;
+import java.io.StringReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +22,77 @@ class PluginConfigTest {
         PluginConfig config = new PluginConfig(null);
         config.apply(c);
         return config;
+    }
+
+    private PluginConfig configFromYaml(String yaml) {
+        PluginConfig config = new PluginConfig(null);
+        config.apply(YamlConfiguration.loadConfiguration(new StringReader(yaml)));
+        return config;
+    }
+
+    @Test
+    void numericYamlScalarsAreAcceptedByActualType() {
+        // 回归：0 是 Integer、10.0/500.0 是 Double；不能因 isInt/isDouble 类型不匹配把合法值重置为默认
+        PluginConfig config = configFromYaml("""
+                display-block-offset: 10.0
+                interaction-cooldown-ms: 500.0
+                anvil-damage:
+                  chance-per-use: 0
+                """);
+        assertEquals(10, config.displayBlockOffset());
+        assertEquals(500, config.interactionCooldownMs());
+        assertEquals(0.0, config.anvilDamageChance(), 1e-9);
+    }
+
+    @Test
+    void nanAndInfinityNeverEnterRuntimeValues() {
+        PluginConfig nan = configFromYaml("""
+                anvil-damage:
+                  chance-per-use: .nan
+                dispenser-cart:
+                  eject-offset: .nan
+                  eject-speed: .inf
+                """);
+        assertFalse(Double.isNaN(nan.anvilDamageChance()), "chance 不得为 NaN");
+        assertEquals(0.12, nan.anvilDamageChance(), 1e-9);
+        assertFalse(Double.isNaN(nan.dispenserEjectOffset()), "eject-offset 不得为 NaN");
+        assertEquals(0.6, nan.dispenserEjectOffset(), 1e-9);
+        assertFalse(Double.isInfinite(nan.dispenserEjectSpeed()), "eject-speed 不得为 Infinity");
+        assertEquals(0.5, nan.dispenserEjectSpeed(), 1e-9);
+    }
+
+    @Test
+    void dispenserValuesAreClampedToSafeBounds() {
+        PluginConfig config = configWith(Map.of(
+                "dispenser-cart.cooldown-ticks", 99999,
+                "dispenser-cart.eject-offset", 999.0,
+                "dispenser-cart.eject-speed", -3.0
+        ));
+        assertEquals(1200, config.dispenserCooldownTicks());
+        assertEquals(8.0, config.dispenserEjectOffset(), 1e-9);
+        assertEquals(0.0, config.dispenserEjectSpeed(), 1e-9);
+    }
+
+    @Test
+    void nonNumberValuesFallBackToDefaultsWithoutThrowing() {
+        PluginConfig config = configWith(Map.of(
+                "display-block-offset", "tall",
+                "interaction-cooldown-ms", "fast",
+                "anvil-damage.chance-per-use", "maybe",
+                "dispenser-cart.eject-offset", "far"
+        ));
+        assertEquals(6, config.displayBlockOffset());
+        assertEquals(250, config.interactionCooldownMs());
+        assertEquals(0.12, config.anvilDamageChance(), 1e-9);
+        assertEquals(0.6, config.dispenserEjectOffset(), 1e-9);
+    }
+
+    @Test
+    void nullMaterialIsNeverAllowed() {
+        PluginConfig allowAll = configWith(Map.of());
+        PluginConfig allowList = configWith(Map.of("allow-all-blocks", false, "enabled-blocks", List.of("STONE")));
+        assertFalse(allowAll.isBlockAllowed(null));
+        assertFalse(allowList.isBlockAllowed(null));
     }
 
     @Test

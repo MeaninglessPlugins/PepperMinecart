@@ -66,12 +66,24 @@ public class PepperMinecartPlugin extends JavaPlugin {
         engine.setSessionManager(sessions);
 
         // 内置矿车类型（全部实现 CartTypeHandler）
-        registry.register(new GenericBlockHandler());
+        registry.register(GenericBlockHandler.INSTANCE);
         registry.register(new SpecialCartHandler());
+        // 内置特殊矿车类型支撑原版特殊矿车实体的识别；被注销/覆盖后死亡掉落会与
+        // 原版掉落重复，因此注册后立即标记为受保护（API 注销/覆盖会被拒绝）。
+        registry.protect(SpecialCartHandler.ID);
         registry.register(new ContainerHandler(sessions));
         registry.register(new WorkstationHandler(sessions));
         registry.register(new AnvilHandler(sessions));
         registry.register(new DispenserCartHandler(config, sessions));
+
+        // 对外服务（供其他插件扩展矿车类型）：先于存量扫描注册服务。
+        // 依赖本插件的扩展插件在本插件 onEnable 返回后才执行自己的 onEnable/registerCartType，
+        // 因此存量扫描延迟到下一个 tick：让所有依赖插件先完成类型注册，避免扩展矿车被误解析为通用处理器。
+        getServer().getServicesManager().register(PepperMinecartAPI.class,
+                new PepperMinecartAPIImpl(registry, engine), this, ServicePriority.Normal);
+
+        // 存量受管矿车：插件启用前已加载的区块不会再触发 ChunkLoadEvent，需主动扫描
+        getServer().getScheduler().runTask(this, engine::registerLoadedCarts);
 
         // 引擎与监听器
         engine.start();
@@ -86,12 +98,11 @@ public class PepperMinecartPlugin extends JavaPlugin {
         // 命令与权限
         var cmd = getCommand("pepperminecart");
         if (cmd != null) {
-            cmd.setExecutor(new PepperMinecartCommand(config));
+            cmd.setExecutor(new PepperMinecartCommand(config, interactionCooldown));
+        } else {
+            // 判空后必须喊出来：命令名与 plugin.yml 不一致时静默启动会让命令永远"未知命令"，极难排查
+            getLogger().severe("未找到命令 'pepperminecart'，请检查 plugin.yml 的 commands 段");
         }
-
-        // 对外服务（供其他插件扩展矿车类型）
-        getServer().getServicesManager().register(PepperMinecartAPI.class,
-                new PepperMinecartAPIImpl(registry, engine), this, ServicePriority.Normal);
 
         // 统计
         if (BSTATS_PLUGIN_ID > 0) {

@@ -1,6 +1,7 @@
 package com.pepperminecart.command;
 
 import com.pepperminecart.config.PluginConfig;
+import com.pepperminecart.cooldown.InteractionCooldown;
 import net.kyori.adventure.text.Component;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -11,9 +12,15 @@ import org.jetbrains.annotations.NotNull;
 public class PepperMinecartCommand implements CommandExecutor {
 
     private final PluginConfig config;
+    private final InteractionCooldown cooldown;
 
     public PepperMinecartCommand(PluginConfig config) {
+        this(config, null);
+    }
+
+    public PepperMinecartCommand(PluginConfig config, InteractionCooldown cooldown) {
         this.config = config;
+        this.cooldown = cooldown;
     }
 
     @Override
@@ -32,6 +39,10 @@ public class PepperMinecartCommand implements CommandExecutor {
             return true;
         }
         config.reload();
+        // /pm reload 后清空交互冷却记录，避免旧配置下的冷却条目残留影响新配置语义
+        if (cooldown != null) {
+            cooldown.clear();
+        }
         sender.sendMessage(Component.text("PepperMinecart 配置已热重载"));
         return true;
     }

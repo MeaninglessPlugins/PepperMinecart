@@ -43,14 +43,22 @@ public class WorkstationHandler implements CartTypeHandler {
     @Override
     public boolean onInteract(Player player, CartContext ctx) {
         Material m = ctx.getOriginalMaterial();
+        if (m == null) {
+            // 异常数据（无原始材质）：switch 匹配 null 会抛 NPE；按未处理放行原版行为
+            return false;
+        }
+        org.bukkit.Location loc = ctx.getLocation();
+        if (loc == null || loc.getWorld() == null) {
+            return false; // 实体已失效：拒绝打开界面而不是抛 NPE
+        }
         InventoryView view = switch (m) {
-            case CRAFTING_TABLE -> player.openWorkbench(ctx.getLocation(), true);
-            case GRINDSTONE -> player.openGrindstone(ctx.getLocation(), true);
-            case LOOM -> player.openLoom(ctx.getLocation(), true);
-            case CARTOGRAPHY_TABLE -> player.openCartographyTable(ctx.getLocation(), true);
-            case SMITHING_TABLE -> player.openSmithingTable(ctx.getLocation(), true);
-            case STONECUTTER -> player.openStonecutter(ctx.getLocation(), true);
-            case ENCHANTING_TABLE -> player.openEnchanting(ctx.getLocation(), true);
+            case CRAFTING_TABLE -> player.openWorkbench(loc, true);
+            case GRINDSTONE -> player.openGrindstone(loc, true);
+            case LOOM -> player.openLoom(loc, true);
+            case CARTOGRAPHY_TABLE -> player.openCartographyTable(loc, true);
+            case SMITHING_TABLE -> player.openSmithingTable(loc, true);
+            case STONECUTTER -> player.openStonecutter(loc, true);
+            case ENCHANTING_TABLE -> player.openEnchanting(loc, true);
             default -> null;
         };
         if (view != null) {

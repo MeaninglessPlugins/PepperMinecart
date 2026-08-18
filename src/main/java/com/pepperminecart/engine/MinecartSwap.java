@@ -1,6 +1,7 @@
 package com.pepperminecart.engine;
 
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Minecart;
 import org.bukkit.util.Vector;
 
@@ -23,7 +24,10 @@ public final class MinecartSwap {
     /** 捕获矿车当前运动状态。 */
     public static Motion capture(Minecart cart) {
         Location loc = cart.getLocation();
-        return new Motion(loc, cart.getVelocity(), loc.getYaw(), loc.getPitch());
+        if (loc == null) {
+            throw new IllegalStateException("矿车不在世界中，无法捕获运动状态: " + cart.getUniqueId());
+        }
+        return new Motion(loc.clone(), cart.getVelocity(), loc.getYaw(), loc.getPitch());
     }
 
     /** 把运动状态应用到目标矿车。 */
@@ -38,7 +42,14 @@ public final class MinecartSwap {
      * @throws RuntimeException 生成被取消/失败时（由调用方决定回滚策略）
      */
     public static <T extends Minecart> T spawnReplacement(Motion motion, Class<T> type) {
-        T replacement = motion.location().getWorld().spawn(motion.location(), type);
+        World world = motion.location().getWorld();
+        if (world == null) {
+            throw new IllegalStateException("运动快照中的世界不可用，无法生成替代矿车");
+        }
+        T replacement = world.spawn(motion.location().clone(), type);
+        if (replacement == null) {
+            throw new IllegalStateException("生成替代矿车失败: " + type.getSimpleName());
+        }
         apply(replacement, motion);
         return replacement;
     }

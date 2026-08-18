@@ -39,7 +39,11 @@ public class AnvilHandler implements CartTypeHandler {
 
     @Override
     public boolean onInteract(Player player, CartContext ctx) {
-        InventoryView view = player.openAnvil(ctx.getLocation(), true);
+        org.bukkit.Location loc = ctx.getLocation();
+        if (loc == null || loc.getWorld() == null) {
+            return false; // 实体已失效：拒绝打开界面而不是抛 NPE
+        }
+        InventoryView view = player.openAnvil(loc, true);
         if (view != null) {
             sessions.openAnvilView(player, ctx.getMinecart(), view);
             return true;

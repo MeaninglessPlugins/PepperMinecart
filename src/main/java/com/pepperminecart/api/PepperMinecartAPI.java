@@ -8,7 +8,16 @@ import org.bukkit.entity.Minecart;
  *
  * <pre>{@code
  * PepperMinecartAPI api = Bukkit.getServicesManager().load(PepperMinecartAPI.class);
+ * if (api == null) {
+ *     getLogger().warning("PepperMinecart 未启用，无法注册矿车类型");
+ *     return;
+ * }
+ * api.registerCartType(handler);
  * }</pre>
+ *
+ * 注意：load() 在服务未注册时返回 null。服务在 PepperMinecart 的 onEnable 内注册，
+ * 因此依赖方需在 plugin.yml 声明 depend: [PepperMinecart] 并在自己的 onEnable 中获取
+ * （onLoad 阶段拿不到）。所有方法要求在主线程调用。
  */
 public interface PepperMinecartAPI {
 

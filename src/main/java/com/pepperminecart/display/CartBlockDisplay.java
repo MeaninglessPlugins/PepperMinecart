@@ -17,10 +17,19 @@ public final class CartBlockDisplay {
     }
 
     public void set(Material material) {
+        if (material == null) {
+            throw new IllegalArgumentException("显示方块材质不能为 null");
+        }
+        if (!material.isBlock()) {
+            throw new IllegalArgumentException("显示方块必须是方块材质: " + material);
+        }
         cart.setDisplayBlockData(material.createBlockData());
     }
 
     public void set(BlockData data) {
+        if (data == null) {
+            throw new IllegalArgumentException("显示方块数据不能为 null");
+        }
         cart.setDisplayBlockData(data);
     }
 

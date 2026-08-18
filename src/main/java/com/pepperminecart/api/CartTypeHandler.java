@@ -22,7 +22,10 @@ public interface CartTypeHandler {
     /** 唯一类型 id（命名空间建议使用所属插件的 namespace，避免跨插件冲突）。 */
     NamespacedKey getId();
 
-    /** 放置这些方块时触发本类型；返回空集表示该类型只能通过 API 创建。 */
+    /**
+     * 放置这些方块时触发本类型；返回空集表示该类型只能通过 API 创建。
+     * 必须返回非 null、不含 null 元素、且调用方不应修改的集合。
+     */
     Set<Material> handledMaterials();
 
     /** 是否允许在该矿车上放置。 */
@@ -54,16 +57,25 @@ public interface CartTypeHandler {
      *
      * @return {@link TakeOffOutcome#DEFAULT} 由引擎执行默认取下流程；
      *         {@link TakeOffOutcome#HANDLED} 表示本处理器已完整处理（含实体替换与物品交付），
-     *         引擎不再动作
+     *         引擎不再动作——此时处理器必须自行完成管理清理：若矿车应还原为空车，
+     *         调用 {@link CartContext#releaseCart()}；若通过 {@link CartContext#replaceEntity}
+     *         替换实体后仍需受管，则保持/改写 PDC 使引擎继续跟踪。遗漏清理会导致矿车
+     *         继续被引擎视为受管（禁止乘坐、每 tick 回调、破坏时按原数据掉落）。
      */
     default TakeOffOutcome onTakeOff(Player player, CartContext ctx, TakeOffResult result) {
         return TakeOffOutcome.DEFAULT;
     }
 
-    /** 取下时返还的物品（默认：存储的完整物品；无存储时回退到放置材质）。 */
+    /** 取下时返还的物品（默认：存储的完整物品；无存储时回退到放置材质）。
+     *  原始材质缺失或为空气等无法构造物品时返回 null——引擎会取消取下并保留矿车数据，
+     *  而不是返还空气物品。 */
     default ItemStack getTakeOffItem(CartContext ctx) {
         ItemStack item = ctx.getBlockItem();
-        return item != null ? item.clone() : new ItemStack(ctx.getOriginalMaterial());
+        if (item != null) {
+            return item.clone();
+        }
+        Material material = ctx.getOriginalMaterial();
+        return (material == null || material.isAir()) ? null : new ItemStack(material);
     }
 
     /** 引擎每 tick 调度（仅受管矿车）。 */
@@ -82,7 +94,12 @@ public interface CartTypeHandler {
     default void onDismount(Entity rider, CartContext ctx) {
     }
 
-    /** 矿车被破坏时回调（引擎掉落方块物品与容器内容之前）。 */
+    /**
+     * 矿车被破坏时回调（引擎掉落方块物品与容器内容之前）。
+     * <p>注意：若本类型实现 {@link VanillaCartSupport} 且矿车以 DEATH 原因移除、
+     * DO_ENTITY_DROPS=true，则原版会自行掉落特殊矿车物品与内容物，
+     * 引擎只清理跟踪，不会调用本回调，也不补掉方块物品。</p>
+     */
     default void onCartDestroyed(CartContext ctx) {
     }
 

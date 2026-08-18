@@ -22,9 +22,11 @@ public class InteractionCooldown implements Listener {
 
     /** @return true 表示本次交互允许执行 */
     public boolean tryUse(Player player) {
-        long now = System.currentTimeMillis();
+        // 单调时钟：currentTimeMillis 会随系统/NTP 校时跳变（回拨冻结全部交互、前拨瞬间全部失效）
+        long now = System.nanoTime();
         Long last = lastUse.get(player.getUniqueId());
-        if (last != null && now - last < config.interactionCooldownMs()) {
+        long cooldownNs = config.interactionCooldownMs() * 1_000_000L;
+        if (last != null && now - last < cooldownNs) {
             return false;
         }
         lastUse.put(player.getUniqueId(), now);
@@ -35,5 +37,10 @@ public class InteractionCooldown implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(PlayerQuitEvent event) {
         lastUse.remove(event.getPlayer().getUniqueId());
+    }
+
+    /** 清空全部冷却记录（/pm reload 时调用，避免旧冷却残留影响新配置语义）。 */
+    public void clear() {
+        lastUse.clear();
     }
 }

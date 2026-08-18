@@ -45,4 +45,9 @@ public abstract class CartSession {
 
     /** 玩家关闭界面时的会话行为（容器写回、虚拟界面回收残留等）。 */
     public abstract void onPlayerClose(Player player);
+
+    /** 无玩家可用的兜底关闭（关服/离线清理）：容器会话回写 PDC；虚拟界面会话把残留物品掉落到矿车位置。 */
+    public void closeWithoutPlayer() {
+        flush();
+    }
 }
